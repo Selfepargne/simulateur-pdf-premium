@@ -1,0 +1,857 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Simulateur Retraite — Selfepargne</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:          #F5F0E8;
+    --bg2:         #EDE8DC;
+    --dark:        #1C1A17;
+    --dark2:       #2E2B25;
+    --gold:        #C9A966;
+    --gold-light:  #DEC28A;
+    --gold-lighter:#EDD9B0;
+    --gold-dark:   #A07840;
+    --text:        #2E2B25;
+    --muted:       #7A7060;
+    --border:      #DDD5C0;
+    --white:       #FFFFFF;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: "DM Sans", sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  /* ── HEADER — fond beige, logo incrusté ── */
+  header {
+    background: var(--bg);
+    border-bottom: 2px solid var(--gold);
+    padding: 0 52px;
+    height: 68px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .logo img {
+    height: 38px;
+    display: block;
+    /* Le logo PNG a un fond blanc — on le retire proprement */
+    mix-blend-mode: multiply;
+  }
+
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+  }
+
+  .header-tag {
+    font-size: 9px;
+    font-weight: 500;
+    letter-spacing: 0.22em;
+    color: var(--gold-dark);
+    text-transform: uppercase;
+    padding: 6px 14px;
+    border: 1px solid var(--gold-lighter);
+    border-radius: 1px;
+    background: rgba(201,169,102,0.07);
+  }
+
+  /* Filet or sous header — réplique du doc */
+  .header-accent {
+    height: 3px;
+    background: linear-gradient(90deg, var(--gold) 0%, var(--gold-lighter) 60%, transparent 100%);
+  }
+
+  /* ── HERO ── */
+  .hero {
+    text-align: center;
+    padding: 60px 24px 36px;
+    position: relative;
+  }
+
+  /* Motif de fond discret */
+  .hero::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image:
+      radial-gradient(circle at 20% 50%, rgba(201,169,102,0.06) 0%, transparent 50%),
+      radial-gradient(circle at 80% 20%, rgba(201,169,102,0.04) 0%, transparent 40%);
+    pointer-events: none;
+  }
+
+  .hero-eyebrow {
+    font-size: 9px;
+    font-weight: 500;
+    letter-spacing: 0.28em;
+    color: var(--gold);
+    text-transform: uppercase;
+    margin-bottom: 16px;
+  }
+
+  .hero h1 {
+    font-family: "Playfair Display", serif;
+    font-size: clamp(34px, 5vw, 56px);
+    font-weight: 900;
+    color: var(--dark);
+    line-height: 1.08;
+    margin-bottom: 18px;
+  }
+
+  .hero h1 em {
+    font-style: italic;
+    color: var(--gold);
+  }
+
+  /* Filet doré centré sous le titre */
+  .hero-rule {
+    width: 60px;
+    height: 2px;
+    background: var(--gold);
+    margin: 0 auto 18px;
+  }
+
+  .hero p {
+    font-size: 15px;
+    color: var(--muted);
+    font-weight: 300;
+    max-width: 460px;
+    margin: 0 auto;
+    line-height: 1.7;
+  }
+
+  /* ── PROGRESS ── */
+  .progress-wrap {
+    max-width: 640px;
+    margin: 32px auto 0;
+    padding: 0 24px;
+    text-align: center;
+  }
+
+  .progress-steps {
+    display: flex;
+    gap: 7px;
+    justify-content: center;
+    margin-bottom: 10px;
+  }
+
+  .step-dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--gold-lighter);
+    transition: all 0.3s;
+  }
+  .step-dot.active { background: var(--gold); transform: scale(1.5); }
+  .step-dot.done   { background: var(--gold-dark); }
+
+  .progress-label {
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+  }
+
+  /* ── CONTAINER ── */
+  .container {
+    max-width: 640px;
+    margin: 0 auto;
+    padding: 24px 24px 80px;
+  }
+
+  /* ── QUESTION CARD ── */
+  .question-card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-top: 3px solid var(--gold);
+    padding: 40px 44px;
+    display: none;
+    animation: up .35s cubic-bezier(.22,1,.36,1);
+  }
+  .question-card.active { display: block; }
+
+  @keyframes up {
+    from { opacity:0; transform:translateY(16px); }
+    to   { opacity:1; transform:translateY(0); }
+  }
+
+  .q-number {
+    font-size: 9px;
+    letter-spacing: 0.22em;
+    color: var(--gold);
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+
+  .q-title {
+    font-family: "Playfair Display", serif;
+    font-size: 23px;
+    font-weight: 700;
+    color: var(--dark);
+    margin-bottom: 6px;
+    line-height: 1.25;
+  }
+
+  .q-sub {
+    font-size: 13px;
+    color: var(--muted);
+    font-weight: 300;
+    margin-bottom: 28px;
+    line-height: 1.6;
+  }
+
+  /* input */
+  .input-group { position: relative; margin-bottom: 14px; }
+  .input-label { font-size: 10px; font-weight: 500; letter-spacing: 0.1em; color: var(--muted); margin-bottom: 7px; display: block; text-transform: uppercase; }
+
+  input[type="number"] {
+    width: 100%;
+    padding: 13px 16px;
+    border: 1.5px solid var(--border);
+    background: var(--bg);
+    font-size: 22px;
+    font-family: "Playfair Display", serif;
+    font-weight: 700;
+    color: var(--dark);
+    outline: none;
+    border-radius: 0;
+    transition: border-color .2s, box-shadow .2s;
+    -moz-appearance: textfield;
+  }
+  input::-webkit-outer-spin-button,
+  input::-webkit-inner-spin-button { -webkit-appearance: none; }
+  input[type="number"]:focus { border-color: var(--gold); box-shadow: 0 0 0 3px rgba(201,169,102,.12); }
+
+  .input-unit {
+    position: absolute; right: 14px; bottom: 13px;
+    font-size: 15px; color: var(--muted); pointer-events: none;
+  }
+
+  /* choices */
+  .choices { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 14px; }
+  .choices.c1 { grid-template-columns: 1fr; }
+  .choices.c5 { grid-template-columns: repeat(5,1fr); }
+
+  .choice-btn {
+    padding: 14px 16px;
+    border: 1.5px solid var(--border);
+    background: var(--bg);
+    cursor: pointer;
+    text-align: left;
+    transition: all .18s;
+    font-family: "DM Sans", sans-serif;
+    border-radius: 0;
+  }
+  .choice-btn:hover { border-color: var(--gold-light); background: rgba(201,169,102,.05); }
+  .choice-btn.selected { border-color: var(--gold); background: rgba(201,169,102,.09); box-shadow: inset 2px 0 0 var(--gold); }
+  .cl { font-size: 13px; font-weight: 500; color: var(--dark); display: block; margin-bottom: 2px; }
+  .cd { font-size: 11px; color: var(--muted); font-weight: 300; }
+
+  /* slider */
+  .slider-val {
+    font-family: "Playfair Display", serif;
+    font-size: 44px; font-weight: 900;
+    color: var(--gold); line-height: 1;
+    margin-bottom: 12px;
+  }
+  .slider-val span { font-size: 16px; color: var(--muted); font-family: "DM Sans", sans-serif; }
+
+  input[type="range"] {
+    width: 100%; height: 3px;
+    -webkit-appearance: none;
+    background: linear-gradient(to right, var(--gold) 0%, var(--gold) var(--pct,42%), var(--gold-lighter) var(--pct,42%));
+    border: none; outline: none; padding: 0; cursor: pointer; border-radius: 2px;
+  }
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 20px; height: 20px; border-radius: 50%;
+    background: var(--white); border: 2px solid var(--gold);
+    box-shadow: 0 2px 8px rgba(201,169,102,.4); cursor: pointer;
+  }
+  .slider-labels { display: flex; justify-content: space-between; font-size: 10px; color: var(--muted); margin-top: 8px; }
+
+  /* hint */
+  .hint {
+    font-size: 12px; color: var(--muted);
+    padding: 10px 14px; margin-top: 12px;
+    background: rgba(201,169,102,.06);
+    border-left: 2px solid var(--gold-lighter);
+    line-height: 1.55;
+  }
+  .hint strong { color: var(--gold-dark); }
+
+  /* nav */
+  .nav-row { display: flex; gap: 10px; margin-top: 30px; }
+
+  .btn-back {
+    padding: 12px 20px;
+    border: 1.5px solid var(--border);
+    background: transparent; color: var(--muted);
+    cursor: pointer; font-size: 13px; font-family: "DM Sans", sans-serif;
+    transition: all .18s;
+  }
+  .btn-back:hover { border-color: var(--gold); color: var(--dark); }
+
+  .btn-next {
+    flex: 1; padding: 14px 24px;
+    background: var(--dark); color: var(--white);
+    border: 2px solid var(--dark);
+    cursor: pointer;
+    font-size: 14px; font-weight: 500; font-family: "DM Sans", sans-serif;
+    letter-spacing: 0.04em;
+    transition: background .22s, color .22s, border-color .22s;
+  }
+  .btn-next:hover { background: var(--gold); color: var(--dark); border-color: var(--gold); }
+  .btn-next span { }
+  .btn-next:disabled { opacity: .35; cursor: not-allowed; background: var(--dark); border-color: var(--dark); color: var(--white); }
+
+  /* ── RESULTS ── */
+  #results { display: none; animation: up .45s cubic-bezier(.22,1,.36,1); }
+
+  /* En-tête résultats — panneau sombre comme dans le PDF */
+  .res-header {
+    background: var(--dark);
+    padding: 30px 38px;
+    border-top: 3px solid var(--gold);
+    position: relative; overflow: hidden;
+  }
+  .res-header::after {
+    content: "";
+    position: absolute; right: -30px; top: -30px;
+    width: 160px; height: 160px; border-radius: 50%;
+    border: 36px solid rgba(201,169,102,.08);
+    pointer-events: none;
+  }
+  .res-eyebrow { font-size: 9px; letter-spacing: 0.22em; color: var(--gold-light); text-transform: uppercase; margin-bottom: 6px; }
+  .res-title { font-family: "Playfair Display", serif; font-size: 26px; font-weight: 700; color: var(--white); margin-bottom: 4px; }
+  .res-sub { font-size: 11px; color: rgba(255,255,255,.45); font-weight: 300; }
+
+  /* Grille pension */
+  .pension-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--border); }
+
+  .pbox { background: var(--white); padding: 26px 30px; }
+  .pbox-label { font-size: 9px; font-weight: 500; letter-spacing: .16em; color: var(--muted); text-transform: uppercase; margin-bottom: 8px; }
+  .pbox-amount { font-family: "Playfair Display", serif; font-size: 36px; font-weight: 900; color: var(--dark); line-height: 1; margin-bottom: 4px; }
+  .pbox-amount.gold { color: var(--gold); }
+  .pbox-detail { font-size: 11px; color: var(--muted); font-weight: 300; }
+
+  /* Bande écart — fond sombre */
+  .gap-band {
+    background: var(--dark2);
+    padding: 24px 30px;
+    display: flex; align-items: center; justify-content: space-between; gap: 16px;
+    border-top: 1px solid rgba(201,169,102,.2);
+  }
+  .gap-label2 { font-size: 9px; letter-spacing: .16em; color: rgba(255,255,255,.45); text-transform: uppercase; margin-bottom: 5px; }
+  .gap-amount { font-family: "Playfair Display", serif; font-size: 46px; font-weight: 900; color: var(--gold-light); line-height: 1; }
+  .gap-sub { font-size: 11px; color: rgba(255,255,255,.4); margin-top: 4px; }
+  .gap-right { text-align: right; }
+  .gap-total-lbl { font-size: 10px; color: rgba(255,255,255,.35); margin-bottom: 4px; }
+  .gap-total { font-family: "Playfair Display", serif; font-size: 19px; font-weight: 700; color: rgba(255,255,255,.7); }
+
+  /* Détail calcul */
+  .breakdown { background: var(--white); padding: 24px 30px; border-top: 1px solid var(--border); }
+  .sec-label { font-size: 9px; font-weight: 500; letter-spacing: .16em; color: var(--muted); text-transform: uppercase; margin-bottom: 16px; }
+  .brow { display: flex; justify-content: space-between; align-items: center; padding: 9px 0; border-bottom: 1px solid var(--bg2); font-size: 13px; }
+  .brow:last-child { border-bottom: none; }
+  .brow .bl { color: var(--muted); font-weight: 300; }
+  .brow .bv { font-weight: 500; color: var(--dark); }
+  .brow .bv.g { color: var(--gold-dark); }
+
+  /* PER box */
+  .per-box {
+    background: var(--bg2);
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    padding: 26px 30px;
+  }
+  /* Filet doré à gauche — comme les cartes du PDF */
+  .per-box { border-left: 3px solid var(--gold); }
+
+  .per-title { font-family: "Playfair Display", serif; font-size: 18px; font-weight: 700; color: var(--dark); margin-bottom: 4px; }
+  .per-sub { font-size: 12px; color: var(--muted); font-weight: 300; margin-bottom: 18px; line-height: 1.55; }
+
+  .per-stats { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; }
+
+  .pstat {
+    background: var(--white);
+    border: 1px solid var(--border);
+    padding: 16px 10px;
+    text-align: center;
+  }
+  .pstat-val { font-family: "Playfair Display", serif; font-size: 20px; font-weight: 900; color: var(--gold); display: block; }
+  .pstat-lbl { font-size: 10px; color: var(--muted); font-weight: 300; margin-top: 4px; display: block; line-height: 1.4; }
+
+  .per-rente-box {
+    margin-top: 12px;
+    padding: 11px 14px;
+    background: rgba(201,169,102,.08);
+    border-left: 2px solid var(--gold-lighter);
+    font-size: 12px; color: var(--muted); line-height: 1.55;
+  }
+  .per-rente-box strong { color: var(--gold-dark); }
+
+  /* CTA — panneau sombre avec filet or */
+  .cta-box {
+    background: var(--dark);
+    padding: 36px 40px;
+    text-align: center;
+    border-top: 2px solid var(--gold);
+  }
+  .cta-box h3 { font-family: "Playfair Display", serif; font-size: 22px; font-weight: 700; color: var(--white); margin-bottom: 8px; }
+  .cta-box p { font-size: 13px; color: rgba(255,255,255,.45); margin-bottom: 22px; font-weight: 300; line-height: 1.65; max-width: 440px; margin-left: auto; margin-right: auto; }
+
+  .cta-btn {
+    display: inline-block;
+    padding: 16px 44px;
+    background: var(--gold);
+    color: var(--dark);
+    text-decoration: none;
+    font-weight: 700; font-size: 14px;
+    font-family: "DM Sans", sans-serif;
+    letter-spacing: .04em;
+    border: none; cursor: pointer;
+    transition: all .2s;
+  }
+  .cta-btn:hover { background: var(--gold-light); transform: translateY(-2px); box-shadow: 0 8px 24px rgba(201,169,102,.38); }
+
+  .cta-phone { margin-top: 14px; font-size: 12px; color: rgba(255,255,255,.35); }
+  .cta-phone strong { color: var(--gold-light); }
+
+  .disclaimer { font-size: 10px; color: var(--muted); text-align: center; margin-top: 22px; line-height: 1.7; padding: 0 12px; font-style: italic; }
+
+  @media (max-width: 560px) {
+    header { padding: 0 20px; }
+    .question-card { padding: 26px 20px; }
+    .choices { grid-template-columns: 1fr; }
+    .choices.c5 { grid-template-columns: repeat(3,1fr); }
+    .pension-grid { grid-template-columns: 1fr; }
+    .per-stats { grid-template-columns: 1fr 1fr; }
+    .gap-band { flex-direction: column; }
+    .gap-right { text-align: left; }
+    .res-header,.pbox,.gap-band,.breakdown,.per-box,.cta-box { padding: 20px 18px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- HEADER : logo incrusté sur fond beige, mix-blend-mode retire le fond blanc PNG -->
+<header>
+  <img src="data:image/png;base64,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wfBcag1t2jbTCKGp0rUXB7Bwiae1mRx/KjcGn4p0dr9OhdEkYOj9P/2bD/hUgYxsbGsY1rWNGGtAwAPIKh9v6/f6960tVbqKgbbrFDNmrhcyKAPYWkdMl5IzkDkMgK+VKBERAREQEREBERAREQcrUen7Xf6Q09wpmvcB7ErRiSM+YP7uioXVFlqbBeZrbVe0We1HIBgSMPRw/wCeoK0eoLu/p6S62iO5UcRkqqLJc1o5viPX446/Ws7+IaWMlPOscwu6PPNLeMzxKlkRF882X3t9LJXV9PRRA8c8rY2483HH713u0dXXyiu9JZ2V00dkmpGujp2ey1zmkhwcRzdjDTg8ufRdvZmwvrLy69Tx/wCbUeRESOTpSPD4A/WQpRvVpJup9LiWFjnV1vcZYeEZLmn3248cgA/FoWzosMxgtf8AP+IZmqyxOWK/hlxF6q2gqKUkubxR+D29P+C8qRMTzCJiY7ACSAAST0AWktpNsrfYbfT3W9UsdTeZAJAJBxNpc9GtHTi83fIetX7GaQm1DqiG5zxf9GW2USSOcOUkg5tYPPngn0HqtOK7psW/2lWzX/pgREVxWEREBERAREQEREBERAREQEREBERAREQFjvte/fij/FdP+vItiKC642m0VrO+i93+hqZ60QshD46uSMcDSSBhpA6uPNRKYTpERSgREQEREBERAXN1TeqTTum7jfa8n6NQU755AOrg0Z4R6noPUrpLz3KhornQTUFxpYauknbwSwzMD2PHkQeRQV7pzfPbW8UrZX39tslxl8FfG6JzD5cXNh+TivFrnfrQditUr7Rc477cSw9xT0oJYXeBfJjha3z5k+QK/m8dnrbW4Tumhoa63FxyW0lW4N+QfxAfJf1ZOz5trbagTTW+suTmnIbWVRcz5tbwg/MFRynhVfZZ0td9R7hVW4l3jeaeGSaVs7m4FRVS54i30aHOJ8iQPNarXxoqWmoqSKko6eKmp4mhscUTA1jAPAAcgF9lMIkREQEREBERAREQEREBERAREQEREBERAREQQPWW3lquDpbhRSut859qQMYHRvPieHIwfgfko1pfbuC41TjVXN/cxH2mRw8LnflEnH1Iiz8mkwzljeva5TUZYxzytm20NLbqGKiooWwwRDDGN8P+K9CIr8RERtCpM78yrnXm3NsrXT3SiqDQvd7U0QiD43k9SBkYJ8fD0UV07szbLhV/Say7T/Rmu9uCGIML/QOJOB8vhhEVScGOMscdrEZbzj7XLZ7bQWi3Q262UsdLSwt4Y44xgD+8nqSeZXrRFcVhERAREQEREBERAREQEREBERAREQEREBERAREQEREBERAREQEREBERAREQEREBERAREQEREBERAREQEREBERB//9k=" alt="Selfepargne" style="height:40px;mix-blend-mode:multiply">
+  <div class="header-tag">Simulateur Retraite</div>
+</header>
+
+<div class="hero">
+  <div class="hero-eyebrow">Estimation personnalisée · 2 minutes</div>
+  <h1>Combien toucherez-vous<br>à la <em>retraite</em> ?</h1>
+  <div class="hero-rule"></div>
+  <p>Répondez à 6 questions. Notre moteur calcule votre pension CNAV + AGIRC-ARRCO et vous indique l'effort d'épargne pour maintenir votre niveau de vie.</p>
+</div>
+
+<div class="progress-wrap">
+  <div class="progress-steps" id="progressDots"></div>
+  <div class="progress-label" id="progressLabel">Question 1 sur 6</div>
+</div>
+
+<div class="container">
+
+  <!-- Q1 -->
+  <div class="question-card active" id="q1">
+    <div class="q-number">Question 01 / 06</div>
+    <div class="q-title">Quelle est votre année de naissance ?</div>
+    <div class="q-sub">Détermine la durée de cotisation requise et votre âge légal de départ à la retraite.</div>
+    <div class="input-group">
+      <label class="input-label">Année de naissance</label>
+      <input type="number" id="birth_year" placeholder="1980" min="1945" max="2000">
+    </div>
+    <div class="hint">💡 Les personnes nées après 1965 doivent cotiser <strong>172 trimestres (43 ans)</strong> pour obtenir le taux plein.</div>
+    <div class="nav-row">
+      <button class="btn-next" onclick="goNext(1)"><span>Continuer →</span></button>
+    </div>
+  </div>
+
+  <!-- Q2 -->
+  <div class="question-card" id="q2">
+    <div class="q-number">Question 02 / 06</div>
+    <div class="q-title">À quel âge avez-vous commencé à travailler ?</div>
+    <div class="q-sub">Permet d'estimer vos trimestres déjà validés et ceux qu'il vous reste à acquérir.</div>
+    <div>
+      <div class="slider-val" id="sv_age">22 <span>ans</span></div>
+      <input type="range" id="start_age" min="16" max="30" value="22"
+        oninput="updateSlider(this,'sv_age',' ans'); updateTrim()">
+      <div class="slider-labels"><span>16 ans</span><span>30 ans</span></div>
+    </div>
+    <div class="hint" id="trim_hint">💡 Calcul en cours…</div>
+    <div class="nav-row">
+      <button class="btn-back" onclick="goBack(2)">← Retour</button>
+      <button class="btn-next" onclick="goNext(2)"><span>Continuer →</span></button>
+    </div>
+  </div>
+
+  <!-- Q3 -->
+  <div class="question-card" id="q3">
+    <div class="q-number">Question 03 / 06</div>
+    <div class="q-title">Quel est votre salaire brut annuel actuel ?</div>
+    <div class="q-sub">Sert de base au calcul CNAV (plafonné au PASS) et à l'acquisition de points AGIRC-ARRCO.</div>
+    <div class="input-group" style="position:relative">
+      <label class="input-label">Salaire brut annuel</label>
+      <input type="number" id="salary" placeholder="55 000" min="15000" max="500000">
+      <span class="input-unit">€</span>
+    </div>
+    <div class="hint">💡 Nous appliquons une correction de carrière automatique : votre salaire moyen sur 25 ans est estimé à <strong>82 % de votre salaire actuel</strong>.</div>
+    <div class="nav-row">
+      <button class="btn-back" onclick="goBack(3)">← Retour</button>
+      <button class="btn-next" onclick="goNext(3)"><span>Continuer →</span></button>
+    </div>
+  </div>
+
+  <!-- Q4 -->
+  <div class="question-card" id="q4">
+    <div class="q-number">Question 04 / 06</div>
+    <div class="q-title">Quelle est votre situation professionnelle ?</div>
+    <div class="q-sub">Chaque régime a ses propres règles de calcul de pension.</div>
+    <div class="choices c1">
+      <button class="choice-btn" onclick="sel('status','salarie',this)">
+        <span class="cl">Salarié du privé (CDI / CDD)</span>
+        <span class="cd">Régime général CNAV + AGIRC-ARRCO</span>
+      </button>
+      <button class="choice-btn" onclick="sel('status','cadre',this)">
+        <span class="cl">Cadre du privé</span>
+        <span class="cd">CNAV + AGIRC-ARRCO tranche 1 &amp; 2</span>
+      </button>
+      <button class="choice-btn" onclick="sel('status','fonctionnaire',this)">
+        <span class="cl">Fonctionnaire</span>
+        <span class="cd">Régime spécial — 75 % des 6 derniers mois</span>
+      </button>
+      <button class="choice-btn" onclick="sel('status','independant',this)">
+        <span class="cl">Indépendant / TNS</span>
+        <span class="cd">SSI (ex-RSI) — cotisations réduites</span>
+      </button>
+    </div>
+    <div class="nav-row">
+      <button class="btn-back" onclick="goBack(4)">← Retour</button>
+      <button class="btn-next" id="n4" onclick="goNext(4)" disabled><span>Continuer →</span></button>
+    </div>
+  </div>
+
+  <!-- Q5 -->
+  <div class="question-card" id="q5">
+    <div class="q-number">Question 05 / 06</div>
+    <div class="q-title">Avez-vous des enfants ?</div>
+    <div class="q-sub">Une majoration de pension de +10 % s'applique à partir de 3 enfants élevés.</div>
+    <div class="choices c5">
+      <button class="choice-btn" onclick="sel('children',0,this)" style="text-align:center">
+        <span class="cl" style="font-size:20px">0</span><span class="cd">Aucun</span>
+      </button>
+      <button class="choice-btn" onclick="sel('children',1,this)" style="text-align:center">
+        <span class="cl" style="font-size:20px">1</span><span class="cd">Enfant</span>
+      </button>
+      <button class="choice-btn" onclick="sel('children',2,this)" style="text-align:center">
+        <span class="cl" style="font-size:20px">2</span><span class="cd">Enfants</span>
+      </button>
+      <button class="choice-btn" onclick="sel('children',3,this)" style="text-align:center">
+        <span class="cl" style="font-size:20px">3</span><span class="cd">+10 %</span>
+      </button>
+      <button class="choice-btn" onclick="sel('children',4,this)" style="text-align:center">
+        <span class="cl" style="font-size:20px">4+</span><span class="cd">+10 %</span>
+      </button>
+    </div>
+    <div class="nav-row">
+      <button class="btn-back" onclick="goBack(5)">← Retour</button>
+      <button class="btn-next" id="n5" onclick="goNext(5)" disabled><span>Continuer →</span></button>
+    </div>
+  </div>
+
+  <!-- Q6 -->
+  <div class="question-card" id="q6">
+    <div class="q-number">Question 06 / 06</div>
+    <div class="q-title">Avez-vous eu des interruptions de carrière ?</div>
+    <div class="q-sub">Chômage, temps partiel prolongé, congé parental, expatriation…</div>
+    <div class="choices c1">
+      <button class="choice-btn" onclick="sel('breaks',0,this)">
+        <span class="cl">Carrière continue, plein temps</span>
+        <span class="cd">Aucune interruption significative</span>
+      </button>
+      <button class="choice-btn" onclick="sel('breaks',0.05,this)">
+        <span class="cl">Quelques interruptions courtes</span>
+        <span class="cd">1 à 3 ans au total — chômage, congé parental…</span>
+      </button>
+      <button class="choice-btn" onclick="sel('breaks',0.12,this)">
+        <span class="cl">Interruptions significatives</span>
+        <span class="cd">3 à 7 ans au total ou temps partiel prolongé</span>
+      </button>
+      <button class="choice-btn" onclick="sel('breaks',0.22,this)">
+        <span class="cl">Carrière heurtée</span>
+        <span class="cd">7 ans ou plus, ou changements importants de statut</span>
+      </button>
+    </div>
+    <div class="nav-row">
+      <button class="btn-back" onclick="goBack(6)">← Retour</button>
+      <button class="btn-next" id="n6" onclick="calc()" disabled><span>Calculer ma pension →</span></button>
+    </div>
+  </div>
+
+  <!-- RÉSULTATS -->
+  <div id="results">
+
+    <div class="res-header">
+      <div class="res-eyebrow">Estimation personnalisée</div>
+      <div class="res-title">Votre projection retraite</div>
+      <div class="res-sub" id="res-sub">—</div>
+    </div>
+
+    <div class="pension-grid">
+      <div class="pbox">
+        <div class="pbox-label">Salaire net actuel</div>
+        <div class="pbox-amount" id="r-salary">—</div>
+        <div class="pbox-detail">par mois</div>
+      </div>
+      <div class="pbox">
+        <div class="pbox-label">Pension estimée totale</div>
+        <div class="pbox-amount gold" id="r-pension">—</div>
+        <div class="pbox-detail" id="r-pension-d">CNAV + AGIRC-ARRCO (net CSG)</div>
+      </div>
+    </div>
+
+    <div class="gap-band">
+      <div>
+        <div class="gap-label2">Manque mensuel à combler</div>
+        <div class="gap-amount" id="r-gap">—</div>
+        <div class="gap-sub" id="r-gap-pct">— % de perte de revenus</div>
+      </div>
+      <div class="gap-right">
+        <div class="gap-total-lbl">À financer sur 20 ans de retraite</div>
+        <div class="gap-total" id="r-gap20">—</div>
+      </div>
+    </div>
+
+    <div class="breakdown">
+      <div class="sec-label">Détail du calcul</div>
+      <div class="brow"><span class="bl">Retraite de base CNAV</span><span class="bv g" id="d-cnav">—</span></div>
+      <div class="brow"><span class="bl">Retraite complémentaire AGIRC-ARRCO</span><span class="bv g" id="d-arrco">—</span></div>
+      <div class="brow"><span class="bl">Trimestres estimés</span><span class="bv" id="d-trim">—</span></div>
+      <div class="brow"><span class="bl">Taux appliqué</span><span class="bv" id="d-taux">—</span></div>
+      <div class="brow"><span class="bl">Majoration enfants</span><span class="bv" id="d-maj">—</span></div>
+      <div class="brow"><span class="bl">Taux de remplacement</span><span class="bv" id="d-remp">—</span></div>
+    </div>
+
+    <div class="per-box">
+      <div class="per-title">💡 Ce que le PER pourrait changer</div>
+      <div class="per-sub" id="per-sub">Versements sur 30 ans · Rendement hypothétique 7 %/an</div>
+      <div class="per-stats">
+        <div class="pstat">
+          <span class="pstat-val" id="p-monthly">—</span>
+          <span class="pstat-lbl">Versement mensuel<br>sur 30 ans</span>
+        </div>
+        <div class="pstat">
+          <span class="pstat-val" id="p-eco">—</span>
+          <span class="pstat-lbl">Économie fiscale<br>/ an (TMI 30 %)</span>
+        </div>
+        <div class="pstat">
+          <span class="pstat-val" id="p-cap">—</span>
+          <span class="pstat-lbl">Capital projeté<br>à la retraite</span>
+        </div>
+      </div>
+      <div class="per-rente-box">
+        Ce capital vous permettrait de vous verser <strong id="p-rente">—</strong> par mois pendant 20 ans, comblant ainsi votre manque de revenus à la retraite.
+      </div>
+    </div>
+
+    <div class="cta-box">
+      <h3>Votre situation mérite une analyse précise</h3>
+      <p>Ces chiffres sont une estimation pédagogique. Un bilan personnalisé permet d'affiner chaque paramètre et d'identifier les leviers adaptés à votre profil.</p>
+      <a href="https://calendly.com/f-beghache-selfepargne/30min" target="_blank" class="cta-btn">
+        📅 Réserver mon bilan gratuit — 30 min
+      </a>
+      <div class="cta-phone">Ou par téléphone : <strong>07 63 76 68 83</strong></div>
+    </div>
+
+    <p class="disclaimer">Les estimations sont calculées sur la base des règles en vigueur en 2024. Elles ne constituent pas un conseil en investissement personnalisé au sens de la réglementation MIF II. Les hypothèses de rendement (7 %/an) sont indicatives et non garanties. Selfepargne — Conseil en Gestion de Patrimoine.</p>
+
+    <div style="text-align:center;margin-top:24px">
+      <button class="btn-back" onclick="reset()" style="font-size:12px;padding:10px 18px">↩ Recommencer</button>
+    </div>
+
+  </div>
+</div>
+
+<script>
+const D = {birth_year:null,start_age:22,salary:null,status:null,children:null,breaks:null};
+let Q = 1;
+
+function dots() {
+  const w = document.getElementById("progressDots");
+  w.innerHTML = "";
+  for (let i=1;i<=6;i++) {
+    const d = document.createElement("div");
+    d.className = "step-dot"+(i===Q?" active":i<Q?" done":"");
+    w.appendChild(d);
+  }
+  document.getElementById("progressLabel").textContent =
+    Q<=6 ? "Question "+Q+" sur 6" : "Résultats";
+}
+dots();
+
+function updateSlider(el, vid, sfx) {
+  const v = el.value;
+  const pct = ((v-el.min)/(el.max-el.min))*100;
+  el.style.setProperty("--pct", pct+"%");
+  document.getElementById(vid).innerHTML = v+" <span>"+sfx.trim()+"</span>";
+  D.start_age = parseInt(v);
+}
+document.getElementById("start_age").style.setProperty("--pct","42.8%");
+
+function updateTrim() {
+  const by = D.birth_year||1980;
+  const sa = parseInt(document.getElementById("start_age").value);
+  const worked = Math.max(0,(2025-by)-sa);
+  const tr = Math.min(worked*4,172);
+  document.getElementById("trim_hint").innerHTML =
+    "💡 Avec un départ à "+sa+" ans, vous avez environ <strong>"+tr+" trimestres validés</strong> (172 requis pour le taux plein).";
+}
+
+function sel(key,val,btn) {
+  D[key] = val;
+  btn.closest(".choices").querySelectorAll(".choice-btn").forEach(b=>b.classList.remove("selected"));
+  btn.classList.add("selected");
+  const nb = document.querySelector("#q"+Q+" .btn-next");
+  if (nb) nb.disabled = false;
+}
+
+function goNext(from) {
+  if (from===1) {
+    const val = document.getElementById("birth_year").value;
+    const y = parseInt(val);
+    if (!val || !y || y<1900 || y>2010) { alert("Merci de saisir votre année de naissance (ex : 1975)"); return; }
+    D.birth_year = y; updateTrim();
+  }
+  if (from===2) {
+    D.start_age = parseInt(document.getElementById("start_age").value) || 22;
+  }
+  if (from===3) {
+    const val = document.getElementById("salary").value;
+    const s = parseInt(val);
+    if (!val || !s || s<1000) { alert("Merci de saisir votre salaire brut annuel (ex : 55000)"); return; }
+    D.salary = s;
+  }
+  var cur = document.getElementById("q"+from);
+  var nxt = document.getElementById("q"+(from+1));
+  if (cur) cur.classList.remove("active");
+  Q = from+1;
+  if (nxt) nxt.classList.add("active");
+  dots(); window.scrollTo({top:0,behavior:"smooth"});
+}
+
+function goBack(from) {
+  document.getElementById("q"+from).classList.remove("active");
+  Q = from-1;
+  document.getElementById("q"+Q).classList.add("active");
+  dots(); window.scrollTo({top:0,behavior:"smooth"});
+}
+
+const € = n => new Intl.NumberFormat("fr-FR",{style:"currency",currency:"EUR",maximumFractionDigits:0}).format(n);
+
+function calc() {
+  const PASS=46368, yr=2025;
+  const age = yr - D.birth_year;
+  const toRet = Math.max(1, 64-age);
+  const worked = Math.max(1, age-D.start_age);
+  const eff = (worked+toRet)*(1-(D.breaks||0));
+  const trim = Math.min(Math.round(eff*4),172);
+
+  // CNAV
+  const SAM = Math.min(D.salary*0.82, PASS);
+  const taux = 0.50*(trim/172);
+  let cnav;
+  if (D.status==="fonctionnaire") {
+    cnav = (D.salary/12)*Math.min(0.75,0.020833*Math.min(trim,167))*12*0.78;
+  } else if (D.status==="independant") {
+    cnav = SAM*taux*(trim/172)*0.75;
+  } else {
+    cnav = SAM*taux*(trim/172);
+  }
+
+  // ARRCO
+  let arrco = 0;
+  if (D.status!=="fonctionnaire") {
+    const pt1 = (Math.min(D.salary,PASS)*0.0787)/19.3135;
+    const pt2 = D.status==="cadre"&&D.salary>PASS ? (Math.min(D.salary-PASS,PASS*7)*0.2159)/19.3135 : 0;
+    arrco = (pt1+pt2)*eff*1.4176;
+  }
+
+  const maj = D.children>=3 ? 1.10 : 1.0;
+  const pensionNet = (cnav+arrco)*maj*0.917;
+  const pm = pensionNet/12;
+  const coeffNet = D.status==="cadre"?0.765:0.80;
+  const sm = (D.salary*coeffNet)/12;
+  const gap = Math.max(0,sm-pm);
+  const gap20 = gap*240;
+  const txRemp = (pm/sm)*100;
+
+  // PER — horizon = min(30, toRet) ans, 7 %
+  const H = Math.min(30,toRet);
+  const r = 0.07/12, n = H*12;
+  const pmt = gap20>0 ? gap20*r/(Math.pow(1+r,n)-1) : 0;
+  const cap = pmt*((Math.pow(1+r,n)-1)/r);
+  const rente = cap/(20*12);
+
+  // Affichage
+  const lbl={salarie:"Salarié du privé",cadre:"Cadre",fonctionnaire:"Fonctionnaire",independant:"Indépendant"};
+  document.getElementById("res-sub").textContent =
+    (lbl[D.status]||"")+" · né(e) en "+D.birth_year+" · "+€(D.salary)+" brut/an";
+
+  document.getElementById("r-salary").textContent  = €(sm);
+  document.getElementById("r-pension").textContent = €(pm);
+  document.getElementById("r-pension-d").textContent =
+    D.status==="fonctionnaire"?"Régime spécial fonctionnaires":"CNAV + AGIRC-ARRCO (net CSG)";
+
+  document.getElementById("r-gap").textContent    = €(gap);
+  document.getElementById("r-gap-pct").textContent= Math.round(100-txRemp)+" % de perte de revenus";
+  document.getElementById("r-gap20").textContent  = €(gap20)+" sur 20 ans";
+
+  document.getElementById("d-cnav").textContent  = €(cnav*0.917/12)+"/mois";
+  document.getElementById("d-arrco").textContent =
+    D.status==="fonctionnaire"?"N/A (régime spécial)":€(arrco*0.917/12)+"/mois";
+  document.getElementById("d-trim").textContent  = trim+" / 172 trimestres";
+  document.getElementById("d-taux").textContent  =
+    D.status==="fonctionnaire"?"Régime spécial":Math.round(taux*100)+" % (taux plein = 50 %)";
+  document.getElementById("d-maj").textContent   = D.children>=3?"+10 % (3 enfants ou plus)":"Aucune";
+  document.getElementById("d-remp").textContent  = Math.round(txRemp)+" %";
+
+  document.getElementById("per-sub").textContent =
+    "Versements sur "+H+" ans · Rendement hypothétique 7 %/an";
+  document.getElementById("p-monthly").textContent = €(Math.round(pmt/5)*5);
+  document.getElementById("p-eco").textContent     = €(Math.round(pmt*12*0.30));
+  document.getElementById("p-cap").textContent     = €(Math.round(cap/1000)*1000);
+  document.getElementById("p-rente").textContent   = €(Math.round(rente));
+
+  document.querySelectorAll(".question-card").forEach(c=>c.classList.remove("active"));
+  document.getElementById("progressLabel").textContent="Résultats";
+  document.querySelectorAll(".step-dot").forEach(d=>{d.classList.remove("active");d.classList.add("done");});
+  document.getElementById("results").style.display="block";
+  window.scrollTo({top:0,behavior:"smooth"});
+}
+
+function reset() {
+  Object.keys(D).forEach(k=>D[k]=null); D.start_age=22; Q=1;
+  document.getElementById("results").style.display="none";
+  document.querySelectorAll(".question-card").forEach(c=>c.classList.remove("active"));
+  document.getElementById("q1").classList.add("active");
+  document.getElementById("birth_year").value="";
+  document.getElementById("salary").value="";
+  document.querySelectorAll(".choice-btn").forEach(b=>b.classList.remove("selected"));
+  ["n4","n5","n6"].forEach(id=>{const b=document.getElementById(id);if(b)b.disabled=true;});
+  dots(); window.scrollTo({top:0,behavior:"smooth"});
+}
+</script>
+</body>
+</html>
