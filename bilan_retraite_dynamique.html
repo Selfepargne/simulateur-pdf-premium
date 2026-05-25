@@ -1,0 +1,1878 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8"/>
+  <title id="pageTitle">Bilan Patrimonial Personnalisé</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,600&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    @page { size: A4; margin: 0; }
+
+    /* ═══════════════════════════════════════════════════════════
+       COUCHE 1 — COULEURS FIXES PREMIUM
+       Ces variables NE SONT JAMAIS modifiées par syncBranding().
+       Elles garantissent la DA patrimoniale quel que soit le cabinet.
+    ═══════════════════════════════════════════════════════════ */
+    :root {
+      /* Fonds — ivoire luxe permanent */
+      --fixed-page-bg:    #F9F7F3;
+      --fixed-panel-bg:   #F0EBE0;
+      --fixed-panel-warm: #F4EFE4;
+
+      /* Noir premium — textes principaux */
+      --fixed-ink:        #1A1A1A;
+      --fixed-ink-mid:    #2C2A26;
+      --fixed-ink-light:  #4A4640;
+
+      /* Gris neutre — éléments secondaires */
+      --fixed-neutral:    #B8B0A3;
+
+      /* Filets — chaleureux ivoire */
+      --fixed-rule:       #DDD4BC;
+      --fixed-rule-soft:  #E8E0CC;
+      --fixed-rule-ghost: #EDE8DB;
+
+      /* Sémantique — jamais modifiée */
+      --fixed-rouge:      #B8543E;
+      --fixed-rouge-bg:   #FBF3F0;
+      --fixed-vert:       #2F6B4A;
+      --fixed-vert-bg:    #EEF5F0;
+
+      /* ─────────────────────────────────────────────────────────
+         COUCHE 2 — COULEURS DYNAMIQUES BRANDING
+         Modifiées par syncBranding() selon le cabinet white-label.
+         Défauts : thème gold/or patrimonial.
+      ───────────────────────────────────────────────────────── */
+
+      /* Couleur primaire cabinet (or/gold par défaut) */
+      --brand-primary:       #B8862F;
+      --brand-primary-dark:  #A8741F;
+      --brand-primary-pale:  #E8D49A;
+      --brand-primary-light: #C9952E;
+      --brand-primary-wash:  #FAF4E8;
+
+      /* Filets brand (chauds dorés) */
+      --brand-rule:          #E0D0B0;
+      --brand-rule-soft:     #EAE0C8;
+      --brand-rule-ghost:    #F0E8D4;
+
+      /* ─────────────────────────────────────────────────────────
+         ALIASES — maintien compatibilité avec le HTML existant.
+         Chaque var() ancienne pointe vers la bonne couche.
+         Aucun HTML ne doit être modifié : seuls les alias changent.
+      ───────────────────────────────────────────────────────── */
+
+      /* Surfaces → couche fixe (ne jamais laisser le cabinet teinter les fonds) */
+      --page-bg:    var(--fixed-page-bg);
+      --panel-bg:   var(--fixed-panel-bg);
+      --panel-gold: var(--fixed-panel-warm);
+
+      /* Encre → couche fixe (le noir ne change jamais) */
+      --ink:        var(--fixed-ink);
+      --ink-mid:    var(--fixed-ink-mid);
+      --ink-light:  var(--fixed-ink-light);
+      --ink-ghost:  var(--fixed-ink-light);
+
+      /* Filets → couche brand (les filets suivent la couleur cabinet) */
+      --rule:       var(--brand-rule);
+      --rule-soft:  var(--brand-rule-soft);
+      --rule-ghost: var(--brand-rule-ghost);
+
+      /* Gold → couche brand */
+      --gold:       var(--brand-primary);
+      --gold-dark:  var(--brand-primary-dark);
+      --gold-pale:  var(--brand-primary-pale);
+      --gold-light: var(--brand-primary-light);
+      --gold-wash:  var(--brand-primary-wash);
+
+      /* Sémantique → couche fixe */
+      --rouge:      var(--fixed-rouge);
+      --rouge-bg:   var(--fixed-rouge-bg);
+      --vert:       var(--fixed-vert);
+      --vert-bg:    var(--fixed-vert-bg);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Montserrat', sans-serif;
+      background: #AEA9A0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 32px;
+      padding: 32px 0 48px;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    /* ═══ PAGE ═══ */
+    .page {
+      width: 794px;
+      background: var(--page-bg);
+      box-shadow:
+        0 1px 3px rgba(0,0,0,0.07),
+        0 8px 28px rgba(0,0,0,0.15),
+        0 28px 52px rgba(0,0,0,0.07);
+      overflow: hidden;
+    }
+
+    /* ═══ HEADER — Architecture bi-panneaux ═══
+       Gauche : ivoire clair, dédié au logo cabinet (white-label friendly)
+       Droite : fond sombre premium, titre gold, date
+       Séparation : fine ligne verticale dégradée + transition naturelle de fond
+    ══════════════════════════════════════════════════════════════════ */
+    .hdr {
+      height: 90px;
+      display: flex;
+      align-items: stretch;
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* ── Zone gauche — Logo cabinet ────────────────────────────── */
+    .hdr-left {
+      flex: 0 0 240px;
+      background: #FEFDF9;
+      border-right: 1px solid #D9C99A;
+      display: flex;
+      align-items: center;
+      padding: 0 28px;
+      position: relative;
+      /* Subtil dégradé chaud sur le bord droit pour transition douce */
+      box-shadow: inset -12px 0 18px -10px rgba(180,145,40,0.08);
+    }
+
+    /* Accent gold en bas de la zone logo */
+    .hdr-left::after {
+      content: '';
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, transparent 0%, #C9A84C 40%, #E8D49A 100%);
+      opacity: 0.7;
+    }
+
+    .hdr-logo-img {
+      max-height: 62px;
+      max-width: 184px;
+      width: auto;
+      object-fit: contain;
+      object-position: left center;
+      display: block;
+    }
+
+    /* Fallback texte si aucun logo */
+    .hdr-logo-text-wrap {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+    .hdr-logo-name {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 19px;
+      font-weight: 600;
+      color: #1A1610;
+      letter-spacing: 0.06em;
+      line-height: 1.15;
+    }
+    .hdr-logo-tagline {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 7px;
+      font-weight: 600;
+      color: #8A7A54;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+      margin-top: 5px;
+      line-height: 1;
+    }
+
+    /* ── Séparateur vertical doré ──────────────────────────────── */
+    .hdr-divider {
+      flex: 0 0 1px;
+      background: linear-gradient(180deg,
+        rgba(201,168,76,0.0)  0%,
+        rgba(201,168,76,0.9) 30%,
+        rgba(201,168,76,0.9) 70%,
+        rgba(201,168,76,0.0) 100%
+      );
+      z-index: 1;
+    }
+
+    /* ── Zone droite — Titre & date ────────────────────────────── */
+    .hdr-right {
+      flex: 1;
+      background: #0F0B08;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 32px 0 32px;
+      gap: 20px;
+    }
+
+    /* Titre principal */
+    .hdr-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 17.5px;
+      font-weight: 700;
+      color: #D4A438;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+      line-height: 1.2;
+    }
+
+    /* Sous-titre "Étude & Projection Retraite" */
+    .hdr-subtitle {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 7.5px;
+      font-weight: 500;
+      color: rgba(242,240,235,0.65);
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+      margin-top: 8px;
+      line-height: 1;
+    }
+
+    /* Filet gold sous le titre */
+    .hdr-title-rule {
+      width: 32px;
+      height: 1.5px;
+      background: linear-gradient(90deg, #C9A84C, rgba(201,168,76,0.2));
+      margin-top: 9px;
+      border-radius: 1px;
+    }
+
+    /* Bloc date (droite) */
+    .hdr-date-block {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 5px;
+      flex-shrink: 0;
+    }
+    .hdr-date-label {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 7px;
+      font-weight: 700;
+      color: rgba(201,168,76,0.75);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      line-height: 1;
+    }
+    .hdr-date {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 13px;
+      font-weight: 500;
+      color: rgba(242,240,235,0.92);
+      letter-spacing: 0.06em;
+      line-height: 1;
+    }
+    .hdr-version-wrap {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 3px;
+    }
+    .hdr-version-line {
+      width: 14px;
+      height: 1px;
+      background: rgba(201,168,76,0.45);
+    }
+    .hdr-tag {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 7.5px;
+      font-weight: 500;
+      color: rgba(242,240,235,0.55);
+      letter-spacing: 0.07em;
+      line-height: 1;
+    }
+
+    /* ═══ GOLD RULE ═══ */
+    .gold-rule {
+      height: 1.5px;
+      background: linear-gradient(90deg, var(--gold) 0%, var(--gold-pale) 55%, transparent 100%);
+    }
+
+    /* ═══ BODY ═══ */
+    .body-wrap {
+      padding: 26px 32px 30px;
+      display: flex; flex-direction: column; gap: 22px;
+    }
+
+    /* ═══ EN-TÊTE DE SECTION ═══ */
+    .sec-head { display: flex; align-items: center; gap: 9px; margin-bottom: 9px; }
+    .sec-label {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 11.5px; font-weight: 700;
+      letter-spacing: 0.08em; text-transform: uppercase;
+      color: var(--gold-dark); white-space: nowrap; flex-shrink: 0;
+    }
+    .sec-subtitle {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 10.5px; font-weight: 500;
+      color: var(--ink-mid); letter-spacing: 0.02em; margin-left: -5px;
+    }
+    .sec-rule { flex: 1; height: 1px; background: var(--rule); }
+
+    /* ═══ CARDS ═══ */
+    .card { background: var(--panel-bg); border: 1px solid var(--rule); border-radius: 2px; }
+    .card-sep { border-right: 1px solid var(--rule-soft); }
+    .card-gold { background: var(--panel-gold); border-left: 2px solid var(--gold); }
+
+    /* ═══ KPI ═══ */
+    /* ── Classe unifiée partagée avec le simulateur HTML ── */
+    .financial-number {
+      font-family: 'Libre Baskerville', Georgia, serif;
+      font-weight: 400;
+      letter-spacing: -0.01em;
+      font-style: normal;
+      line-height: 1.05;
+    }
+    .kpi-num {
+      font-family: 'Libre Baskerville', Georgia, serif;
+      font-weight: 400; line-height: 1.05; letter-spacing: -0.01em; font-style: normal;
+    }
+    .kpi-neutral { color: var(--ink);      font-size: 30px; font-weight: 400; letter-spacing:-0.01em; }
+    .kpi-gold    { color: var(--gold-dark); font-size: 30px; font-weight: 400; letter-spacing:-0.01em; }
+    .kpi-rouge   { color: #B8543E;          font-size: 29px; font-weight: 400; }
+    .kpi-vert    { color: var(--vert);      font-size: 25px; font-weight: 400; }
+    .kpi-panel   { font-family: 'Libre Baskerville', Georgia, serif; font-size: 17px; font-weight: 400; color: var(--ink); line-height: 1.05; }
+    .kpi-lg      { font-family: 'Libre Baskerville', Georgia, serif; font-size: 28px; font-weight: 400; color: var(--gold-dark); line-height: 1.05; }
+
+    /* ═══ LABELS & CORPS ═══ */
+    .lbl { font-family: 'Montserrat', sans-serif; font-size: 11px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: var(--ink-mid); line-height: 1; }
+    .lbl-gold { font-family: 'Montserrat', sans-serif; font-weight: 700; color: var(--gold-dark); }
+    .lbl-vert { font-family: 'Montserrat', sans-serif; color: rgba(47,107,74,0.85); }
+    .body-copy { font-family: 'Montserrat', sans-serif; font-size: 10.5px; font-weight: 600; line-height: 1.70; color: var(--ink-mid); }
+    .body-copy strong { font-weight: 700; color: var(--ink); }
+    .body-xs { font-family: 'Montserrat', sans-serif; font-size: 10px; font-weight: 600; line-height: 1.60; color: var(--ink-mid); }
+    .info-primary { font-family: 'Montserrat', sans-serif; font-size: 12px; font-weight: 600; color: var(--ink); line-height: 1.2; }
+    .info-secondary { font-family: 'Montserrat', sans-serif; font-size: 10px; font-weight: 600; color: var(--ink-mid); margin-top: 2px; }
+
+    /* ═══ RECO ═══ */
+    .reco-row { display: flex; align-items: center; gap: 16px; padding: 17px 0; }
+    .reco-row + .reco-row { border-top: 1px solid var(--rule); }
+    .reco-bubble { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; background: var(--gold); border: 1.5px solid var(--gold); box-sizing: border-box; }
+    .reco-bubble span { font-family: 'Cormorant Garamond', serif; font-size: 15px; font-weight: 600; line-height: 1; color: #FFFFFF; }
+    .reco-title { font-family: 'Cormorant Garamond', serif; font-size: 16.5px; font-weight: 700; color: var(--ink); line-height: 1.3; letter-spacing: 0.00em; margin-bottom: 6px; }
+
+    /* ═══ BADGES ═══ */
+    .badge-priority, .badge-neutral { border: 1px solid #DDD3C5; border-radius: 3px; background: #F7F4EF; padding: 8px 14px; text-align: center; white-space: nowrap; flex-shrink: 0; width: 110px; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+    .badge-lbl, .badge-lbl-n { font-family: 'Montserrat', sans-serif; font-size: 11px; font-weight: 700; color: var(--gold-dark); letter-spacing: 0.03em; display: block; margin-bottom: 2px; }
+    .badge-sub, .badge-sub-n { font-family: 'Montserrat', sans-serif; font-size: 9px; font-weight: 500; color: var(--gold-dark); }
+
+    /* ═══ FOOTER ═══ */
+    .page-footer { padding: 9px 32px; border-top: 1px solid var(--rule-ghost); display: flex; justify-content: center; align-items: center; gap: 24px; background: var(--page-bg); }
+    .footer-note { font-family: 'Montserrat', sans-serif; font-size: 8.5px; font-weight: 600; color: var(--ink-mid); letter-spacing: 0.02em; line-height: 1.5; max-width: 560px; }
+    .footer-page { font-family: 'Montserrat', sans-serif; font-size: 9px; font-weight: 600; color: var(--ink-mid); letter-spacing: 0.06em; }
+
+    .rule-h { border: none; border-top: 1px solid var(--rule-ghost); }
+
+    @media print {
+      body { background: none; padding: 0; gap: 0; }
+      .page { box-shadow: none; page-break-after: always; }
+      #btn-print-pdf { display: none !important; }
+    }
+
+    /* ── Mode Puppeteer : fond ivoire sur toute la page A4 ── */
+    body.puppeteer-mode {
+      background: var(--fixed-page-bg);
+      gap: 0;
+      padding: 0;
+      min-height: 100vh;
+    }
+    body.puppeteer-mode .page {
+      box-shadow: none;
+      border-radius: 0;
+      width: 100%;
+      max-width: 794px;
+      min-height: 297mm;
+      background: var(--fixed-page-bg);
+    }
+
+    /* ── Typographie premium Puppeteer ── */
+    html {
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      text-rendering: optimizeLegibility;
+    }
+  </style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════════════
+     PAGE 1
+══════════════════════════════════════════════════ -->
+<div class="page">
+
+  <!-- HEADER PAGE 1 -->
+  <div class="hdr">
+
+    <!-- Zone gauche — Logo cabinet (fond ivoire, white-label friendly) -->
+    <div class="hdr-left">
+      <!-- Logo image si BRAND.logo présent -->
+      <img id="hdr-logo-img" class="hdr-logo-img" src="" alt="" style="display:none;">
+      <!-- Fallback texte si pas de logo -->
+      <div id="hdr-logo-text-wrap" class="hdr-logo-text-wrap" style="display:none;">
+        <div class="hdr-logo-name"  id="hdr-name"></div>
+        <div class="hdr-logo-tagline" id="hdr-tagline"></div>
+      </div>
+    </div>
+
+    <!-- Séparateur vertical doré -->
+    <div class="hdr-divider"></div>
+
+    <!-- Zone droite — Titre & date (fond sombre premium) -->
+    <div class="hdr-right">
+      <div>
+        <div class="hdr-title">Bilan Patrimonial Personnalisé</div>
+        <div class="hdr-subtitle">Étude &amp; Projection Retraite</div>
+        <div class="hdr-title-rule"></div>
+      </div>
+      <div class="hdr-date-block">
+        <div class="hdr-date-label">Date du rapport</div>
+        <div class="hdr-date" id="hdr-date"></div>
+        <div class="hdr-version-wrap">
+          <div class="hdr-version-line"></div>
+          <div class="hdr-tag" id="hdr-version"></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+  <div class="gold-rule"></div>
+
+  <!-- BODY -->
+  <div class="body-wrap">
+
+    <!-- ① BANDEAU INFOS CLIENT ─────────────────────────────── -->
+    <section>
+      <div class="sec-head">
+        <span class="sec-label">Bilan de simulation</span>
+        <div class="sec-rule"></div>
+      </div>
+      <div style="display:flex;height:52px;">
+
+        <!-- Colonne 1 — Profil / Âge -->
+        <div style="flex:1;display:flex;align-items:center;gap:11px;padding:0 16px 0 0;border-right:1px solid var(--rule);">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" style="flex-shrink:0;">
+            <circle cx="12" cy="7" r="4" stroke="var(--gold)" stroke-width="1.3"/>
+            <path d="M4 20c0-4.4 3.6-8 8-8s8 3.6 8 8" stroke="var(--gold)" stroke-width="1.3" stroke-linecap="round"/>
+          </svg>
+          <div>
+            <div class="info-primary" id="info-age-statut"></div>
+            <div class="info-secondary" id="info-depart"></div>
+          </div>
+        </div>
+
+        <!-- Colonne 2 — Trimestres -->
+        <div style="flex:1;display:flex;align-items:center;gap:11px;padding:0 16px;border-right:1px solid var(--rule);">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" style="flex-shrink:0;">
+            <rect x="3" y="4" width="18" height="17" rx="2.5" stroke="var(--gold)" stroke-width="1.3"/>
+            <path d="M8 2v4M16 2v4M3 9h18" stroke="var(--gold)" stroke-width="1.3" stroke-linecap="round"/>
+            <circle cx="8" cy="14" r="1" fill="var(--gold)"/>
+            <circle cx="12" cy="14" r="1" fill="var(--gold)"/>
+            <circle cx="16" cy="14" r="1" fill="var(--gold)"/>
+          </svg>
+          <div>
+            <div class="info-primary" id="info-trimestres"></div>
+            <div class="info-secondary" id="info-situation"></div>
+          </div>
+        </div>
+
+        <!-- Colonne 3 — Salaire -->
+        <div style="flex:1;display:flex;align-items:center;gap:11px;padding:0 4px 0 16px;">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" style="flex-shrink:0;">
+            <circle cx="12" cy="12" r="9" stroke="var(--gold)" stroke-width="1.3"/>
+            <path d="M12 7v10M9.5 9.5C9.5 8.4 10.6 7.5 12 7.5s2.5.9 2.5 2c0 1-.9 1.7-2.5 2-1.6.3-2.5 1-2.5 2.1s1.1 2.1 2.5 2.1 2.5-.9 2.5-2" stroke="var(--gold)" stroke-width="1.3" stroke-linecap="round"/>
+          </svg>
+          <div>
+            <div class="info-primary" id="info-salaire"></div>
+            <div class="info-secondary">Salaire de référence</div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ② KPI 3 COLONNES ────────────────────────────────────── -->
+    <section>
+      <div class="sec-head">
+        <span class="sec-label">Synthèse patrimoniale</span>
+        <span class="sec-subtitle">— 3 indicateurs clés</span>
+        <div class="sec-rule"></div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;">
+
+        <!-- KPI 1 — Pension nette -->
+        <div class="card" style="padding:16px 15px;border-radius:4px;display:flex;align-items:center;gap:14px;">
+          <svg width="44" height="44" viewBox="0 0 36 36" fill="none" style="flex-shrink:0;opacity:0.90;">
+            <ellipse cx="18" cy="28" rx="10" ry="3.5" stroke="var(--gold)" stroke-width="1.4"/>
+            <path d="M8 28v-4" stroke="var(--gold)" stroke-width="1.4" stroke-linecap="round"/>
+            <path d="M28 28v-4" stroke="var(--gold)" stroke-width="1.4" stroke-linecap="round"/>
+            <ellipse cx="18" cy="22" rx="10" ry="3.5" stroke="var(--gold)" stroke-width="1.4"/>
+            <path d="M8 22v-4" stroke="var(--gold)" stroke-width="1.4" stroke-linecap="round"/>
+            <path d="M28 22v-4" stroke="var(--gold)" stroke-width="1.4" stroke-linecap="round"/>
+            <ellipse cx="18" cy="16" rx="10" ry="3.5" stroke="var(--gold)" stroke-width="1.4"/>
+          </svg>
+          <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:4px;">
+            <div class="lbl" style="font-size:9.5px;letter-spacing:0.05em;">Pension nette estimée</div>
+            <div class="kpi-num kpi-neutral" id="kpi-pension"></div>
+            <div class="body-xs" style="font-size:9px;">Après CSG 8,3 %</div>
+          </div>
+        </div>
+
+        <!-- KPI 2 — Salaire net -->
+        <div class="card" style="padding:16px 15px;border-radius:4px;display:flex;align-items:center;gap:14px;">
+          <svg width="44" height="44" viewBox="0 0 36 36" fill="none" style="flex-shrink:0;opacity:0.90;">
+            <rect x="4" y="11" width="28" height="20" rx="3" stroke="var(--gold)" stroke-width="1.4"/>
+            <path d="M4 16h28" stroke="var(--gold)" stroke-width="1.4"/>
+            <rect x="22" y="13.5" width="8" height="7" rx="1.5" stroke="var(--gold)" stroke-width="1.2" fill="none"/>
+            <path d="M10 11V8a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v3" stroke="var(--gold)" stroke-width="1.4" stroke-linecap="round"/>
+          </svg>
+          <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:4px;">
+            <div class="lbl" style="font-size:9.5px;letter-spacing:0.05em;">Salaire net actuel</div>
+            <div class="kpi-num kpi-neutral" id="kpi-salaire-net"></div>
+            <div class="body-xs" style="font-size:9px;">Par mois net</div>
+          </div>
+        </div>
+
+        <!-- KPI 3 — Taux de remplacement -->
+        <div class="card" style="padding:16px 15px;border-radius:4px;display:flex;align-items:center;gap:14px;">
+          <svg width="44" height="44" viewBox="0 0 36 36" fill="none" style="flex-shrink:0;opacity:0.90;">
+            <circle cx="18" cy="18" r="12" stroke="var(--rule)" stroke-width="4" fill="none"/>
+            <circle cx="18" cy="18" r="12"
+                    id="kpi-taux-arc"
+                    stroke="var(--gold)" stroke-width="4" fill="none"
+                    stroke-dasharray="51.3 75.4"
+                    stroke-dashoffset="0"
+                    stroke-linecap="round"
+                    transform="rotate(-90 18 18)"/>
+          </svg>
+          <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:4px;">
+            <div class="lbl lbl-gold" style="font-size:9.5px;letter-spacing:0.05em;font-weight:700;color:var(--gold-dark);">Taux de remplacement</div>
+            <div class="kpi-num kpi-gold" id="kpi-taux-remp"></div>
+            <div class="body-xs lbl-gold" id="kpi-objectif" style="font-size:9px;color:var(--gold-dark);font-weight:600;"></div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ③ GRAPHIQUE PROJECTION ──────────────────────────────── -->
+    <section>
+      <div class="sec-head">
+        <span class="sec-label">Projection patrimoniale</span>
+        <span class="sec-subtitle" id="proj-subtitle"></span>
+        <div class="sec-rule"></div>
+      </div>
+
+      <div style="display:flex;height:192px;gap:0;">
+
+        <!-- Zone graphique SVG dynamique -->
+        <div style="flex:0 0 54%;padding:10px 14px 10px 0;display:flex;flex-direction:column;border-right:1px solid var(--rule);">
+          <div style="position:relative;flex:1;">
+
+            <!-- Label capital final — en haut à droite -->
+            <div style="position:absolute;right:0;top:2%;display:flex;flex-direction:column;align-items:flex-end;pointer-events:none;">
+              <span id="proj-label-final" style="font-family:'Cormorant Garamond',serif;font-size:13px;font-weight:600;color:var(--gold-dark);letter-spacing:0.01em;line-height:1;white-space:nowrap;"></span>
+            </div>
+
+            <!-- Labels montants intermédiaires -->
+            <div id="proj-labels" style="position:absolute;top:0;left:0;right:0;bottom:0;pointer-events:none;"></div>
+
+            <!-- SVG dynamique -->
+            <svg id="proj-svg" width="100%" height="100%" viewBox="0 0 300 112"
+                 preserveAspectRatio="none"
+                 style="display:block;position:absolute;top:0;left:0;overflow:visible;">
+              <defs>
+                <linearGradient id="chartFill2" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="var(--gold)" stop-opacity="0.08"/>
+                  <stop offset="100%" stop-color="var(--gold)" stop-opacity="0.00"/>
+                </linearGradient>
+              </defs>
+              <polygon id="proj-fill"  points="" fill="url(#chartFill2)"/>
+              <polyline id="proj-versé" points="" fill="none" stroke="#B0A898" stroke-width="1.4" stroke-dasharray="5,4" stroke-linecap="round" stroke-linejoin="round" opacity="0.85"/>
+              <polyline id="proj-total" points="" fill="none" stroke="var(--gold)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+              <line x1="0" y1="108" x2="300" y2="108" stroke="var(--rule-soft)" stroke-width="0.5" opacity="0.5"/>
+              <g id="proj-points"></g>
+            </svg>
+          </div>
+
+          <!-- Axe X -->
+          <div id="proj-xaxis" style="display:flex;padding:6px 0 0 0;position:relative;height:20px;"></div>
+
+          <!-- Légende -->
+          <div style="display:flex;gap:18px;margin-top:7px;">
+            <div style="display:flex;align-items:center;gap:6px;">
+              <svg width="16" height="2" viewBox="0 0 16 2"><line x1="0" y1="1" x2="16" y2="1" stroke="var(--gold)" stroke-width="2" stroke-linecap="round"/></svg>
+              <span style="font-family:'Montserrat',sans-serif;font-size:10px;font-weight:600;color:var(--ink-mid);">Capital total</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <svg width="16" height="3" viewBox="0 0 16 3"><line x1="0" y1="1.5" x2="16" y2="1.5" stroke="#B0A898" stroke-width="1.6" stroke-dasharray="5,4" stroke-linecap="round"/></svg>
+              <span style="font-family:'Montserrat',sans-serif;font-size:10px;font-weight:600;color:var(--ink-mid);">Capital versé</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Résumé chiffré -->
+        <div style="flex:1;display:flex;align-items:center;justify-content:center;padding:10px 0 10px 16px;">
+          <div style="width:100%;background:#F5F1E8;border:1px solid #DDD3C5;border-radius:3px;padding:14px 16px;display:flex;flex-direction:column;gap:0;">
+
+            <div style="display:flex;align-items:baseline;justify-content:space-between;gap:8px;padding-bottom:10px;">
+              <div style="font-family:'Montserrat',sans-serif;font-size:9.5px;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;color:var(--ink-mid);white-space:nowrap;flex-shrink:0;">Capital versé</div>
+              <div class="kpi-panel" id="resume-verse" style="font-size:17px;font-weight:400;color:var(--ink);line-height:1.05;white-space:nowrap;"></div>
+            </div>
+            <div style="height:1px;background:#DDD3C5;margin:0 4px 10px 4px;opacity:0.7;"></div>
+
+            <div style="display:flex;align-items:baseline;justify-content:space-between;gap:8px;padding-bottom:10px;">
+              <div style="font-family:'Montserrat',sans-serif;font-size:9.5px;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;color:var(--ink-mid);white-space:nowrap;flex-shrink:0;">Intérêts composés</div>
+              <div class="kpi-panel" id="resume-interets" style="font-size:17px;font-weight:400;color:var(--ink);line-height:1.05;white-space:nowrap;"></div>
+            </div>
+            <div style="height:1.5px;background:#B8A080;margin:0 4px 10px 4px;opacity:0.85;"></div>
+
+            <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:8px;">
+              <div style="font-family:'Montserrat',sans-serif;font-size:9.5px;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;color:var(--gold-dark);white-space:nowrap;flex-shrink:0;line-height:1.3;">Capital<br>final estimé</div>
+              <div id="resume-capital" style="font-family:'Libre Baskerville',Georgia,serif;font-size:23px;font-weight:400;color:var(--gold-dark);line-height:1.05;letter-spacing:-0.01em;white-space:nowrap;"></div>
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ④ DIAGNOSTIC + STRATÉGIE ────────────────────────────── -->
+    <section style="display:grid;grid-template-columns:46% 1fr;gap:9px;">
+
+      <!-- Diagnostic -->
+      <div>
+        <div class="sec-head">
+          <span class="sec-label">Diagnostic &amp; effort d'épargne requis</span>
+          <div class="sec-rule"></div>
+        </div>
+        <div style="display:flex;gap:8px;height:148px;margin-top:14px;">
+
+          <!-- BLOC ROUGE — Manque mensuel -->
+          <div style="flex:1;display:flex;flex-direction:column;border:1px solid #DDD3C5;border-top:3px solid #D97A63;border-radius:2px;background:#FBF3F0;overflow:hidden;padding:14px 13px 14px;">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+              <svg width="22" height="22" viewBox="0 0 32 32" fill="none" style="flex-shrink:0;">
+                <circle cx="16" cy="16" r="13" stroke="#D97A63" stroke-width="1.8"/>
+                <line x1="16" y1="8" x2="16" y2="22" stroke="#D97A63" stroke-width="2" stroke-linecap="round"/>
+                <polyline points="10,17 16,23 22,17" stroke="#D97A63" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+              </svg>
+              <span style="font-family:'Montserrat',sans-serif;font-size:8.5px;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;color:var(--ink);line-height:1.25;">Manque mensuel estimé</span>
+            </div>
+            <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;text-align:center;flex:1;">
+              <div class="kpi-num kpi-rouge" id="diag-manque"></div>
+              <div style="font-family:'Montserrat',sans-serif;font-size:9.5px;font-weight:500;color:var(--ink);">par mois à la retraite</div>
+            </div>
+          </div>
+
+          <!-- BLOC VERT — Effort épargne -->
+          <div style="flex:1;display:flex;flex-direction:column;border:1px solid #DDD3C5;border-top:3px solid #6C8A4F;border-radius:2px;background:var(--vert-bg);overflow:hidden;padding:14px 13px 14px;">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+              <svg width="22" height="22" viewBox="0 0 32 32" fill="none" style="flex-shrink:0;">
+                <circle cx="16" cy="16" r="13" stroke="#6C8A4F" stroke-width="1.8"/>
+                <line x1="16" y1="24" x2="16" y2="10" stroke="#6C8A4F" stroke-width="2" stroke-linecap="round"/>
+                <polyline points="10,15 16,9 22,15" stroke="#6C8A4F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+              </svg>
+              <span style="font-family:'Montserrat',sans-serif;font-size:8.5px;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;color:var(--ink);line-height:1.25;">Effort d'épargne conseillé</span>
+            </div>
+            <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;text-align:center;flex:1;">
+              <div class="kpi-num kpi-vert">
+                <span id="diag-effort"></span>
+                <span style="font-size:12px;font-weight:500;color:var(--ink);">/mois</span>
+              </div>
+              <div style="font-family:'Montserrat',sans-serif;font-size:8px;font-weight:500;color:var(--ink);white-space:nowrap;" id="diag-tmi-label"></div>
+              <div style="font-family:'Libre Baskerville',Georgia,serif;font-size:17px;font-weight:400;color:var(--vert);line-height:1.05;">
+                <span id="diag-cout-reel"></span>
+                <span style="font-family:'Montserrat',sans-serif;font-size:11px;font-weight:500;color:var(--ink);">/mois</span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Stratégie -->
+      <div>
+        <div class="sec-head">
+          <span class="sec-label">Votre stratégie retraite personnalisée</span>
+          <div class="sec-rule"></div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:10px;padding:8px 8px 8px 16px;border-left:2.5px solid var(--gold);">
+          <p class="body-copy" id="strat-p1" style="margin:0;"></p>
+          <p class="body-copy" id="strat-p2" style="margin:0;"></p>
+          <p class="body-copy" id="strat-p3" style="margin:0;"></p>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <!-- FOOTER PAGE 1 -->
+  <div class="page-footer">
+    <span class="footer-note" id="footer-disclaimer-1"></span>
+    <span class="footer-page">1 / 2</span>
+  </div>
+
+</div><!-- /PAGE 1 -->
+
+
+<!-- ══════════════════════════════════════════════════
+     PAGE 2
+══════════════════════════════════════════════════ -->
+<div class="page">
+
+  <!-- HEADER PAGE 2 -->
+  <div class="hdr">
+
+    <!-- Zone gauche — Logo cabinet -->
+    <div class="hdr-left">
+      <img id="hdr-logo-img-2" class="hdr-logo-img" src="" alt="" style="display:none;">
+      <div id="hdr-logo-text-wrap-2" class="hdr-logo-text-wrap" style="display:none;">
+        <div class="hdr-logo-name"  id="hdr-name-2"></div>
+        <div class="hdr-logo-tagline" id="hdr-tagline-2"></div>
+      </div>
+    </div>
+
+    <!-- Séparateur vertical doré -->
+    <div class="hdr-divider"></div>
+
+    <!-- Zone droite — Titre & date -->
+    <div class="hdr-right">
+      <div>
+        <div class="hdr-title">Bilan Patrimonial Personnalisé</div>
+        <div class="hdr-subtitle">Étude &amp; Projection Retraite</div>
+        <div class="hdr-title-rule"></div>
+      </div>
+      <div class="hdr-date-block">
+        <div class="hdr-date-label">Date du rapport</div>
+        <div class="hdr-date" id="hdr-date-2"></div>
+        <div class="hdr-version-wrap">
+          <div class="hdr-version-line"></div>
+          <div class="hdr-tag" id="hdr-version-2"></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+  <div class="gold-rule"></div>
+
+  <!-- BODY -->
+  <div class="body-wrap">
+
+    <!-- ⑤ RECOMMANDATIONS ─────────────────────────────────── -->
+    <section>
+      <div class="sec-head">
+        <span class="sec-label">Stratégie &amp; recommandations patrimoniales</span>
+        <div class="sec-rule"></div>
+      </div>
+      <div id="recos-container"></div>
+    </section>
+
+    <!-- ⑥ CTA FINAL ──────────────────────────────────────── -->
+    <section style="margin-top:8px;">
+      <div style="border:1px solid #DDD3C5;border-top:2px solid var(--gold);border-radius:2px;background:var(--panel-bg);overflow:hidden;display:flex;align-items:stretch;">
+
+        <!-- Zone gauche — Titre + description -->
+        <div style="flex:1.4;padding:18px 24px 18px 20px;display:flex;flex-direction:column;justify-content:center;gap:10px;background:var(--panel-bg);">
+          <div>
+            <div style="font-family:'Montserrat',sans-serif;font-size:12px;font-weight:700;letter-spacing:0.14em;color:var(--gold-dark);text-transform:uppercase;line-height:1.35;margin-bottom:6px;" id="cta-title"></div>
+            <div style="width:36px;height:1.5px;background:linear-gradient(90deg,var(--gold),rgba(184,134,47,0.2));border-radius:1px;"></div>
+          </div>
+          <div style="display:flex;align-items:flex-start;gap:12px;">
+            <div style="flex-shrink:0;margin-top:2px;">
+              <svg width="24" height="24" viewBox="0 0 16 16" fill="none">
+                <rect x="1.5" y="2.5" width="13" height="12" rx="2" stroke="var(--gold)" stroke-width="1.3"/>
+                <path d="M5 1v3M11 1v3M1.5 7h13" stroke="var(--gold)" stroke-width="1.3" stroke-linecap="round"/>
+                <circle cx="5.5"  cy="10.5" r="0.9" fill="var(--gold)"/>
+                <circle cx="8"    cy="10.5" r="0.9" fill="var(--gold)"/>
+                <circle cx="10.5" cy="10.5" r="0.9" fill="var(--gold)"/>
+              </svg>
+            </div>
+            <p style="font-family:'Montserrat',sans-serif;font-size:10px;font-weight:500;color:var(--ink-mid);line-height:1.75;margin:0;" id="cta-text"></p>
+          </div>
+        </div>
+
+        <!-- Séparateur -->
+        <div style="display:flex;align-items:center;justify-content:center;width:1px;align-self:stretch;padding:20px 0;flex-shrink:0;">
+          <div style="width:1px;height:100%;background:#D8C7AE;"></div>
+        </div>
+
+        <!-- Zone QR code -->
+        <div style="width:130px;padding:18px 16px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:9px;background:var(--panel-bg);">
+          <div style="font-family:'Montserrat',sans-serif;font-size:8px;font-weight:600;color:var(--gold-dark);letter-spacing:0.04em;text-transform:uppercase;text-align:center;">Scannez pour simuler</div>
+          <div id="qr-container" style="width:108px;height:108px;border:3px solid var(--gold);border-radius:4px;background:#FFFFFF;display:flex;align-items:center;justify-content:center;box-sizing:border-box;position:relative;overflow:hidden;">
+            <!-- Coins décoratifs -->
+            <div style="position:absolute;top:4px;left:4px;width:14px;height:14px;border-top:2px solid var(--gold);border-left:2px solid var(--gold);border-radius:1px;opacity:0.5;"></div>
+            <div style="position:absolute;top:4px;right:4px;width:14px;height:14px;border-top:2px solid var(--gold);border-right:2px solid var(--gold);border-radius:1px;opacity:0.5;"></div>
+            <div style="position:absolute;bottom:4px;left:4px;width:14px;height:14px;border-bottom:2px solid var(--gold);border-left:2px solid var(--gold);border-radius:1px;opacity:0.5;"></div>
+            <div style="position:absolute;bottom:4px;right:4px;width:14px;height:14px;border-bottom:2px solid var(--gold);border-right:2px solid var(--gold);border-radius:1px;opacity:0.5;"></div>
+            <!-- QR généré dynamiquement ici -->
+            <img id="qr-img" src="" alt="QR Code" style="width:90px;height:90px;object-fit:contain;display:none;position:relative;z-index:1;">
+            <div id="qr-placeholder" style="font-family:'Montserrat',sans-serif;font-size:7px;font-weight:500;color:#C4A86A;text-align:center;line-height:1.5;letter-spacing:0.04em;">QR<br>CODE</div>
+          </div>
+        </div>
+
+        <!-- Séparateur -->
+        <div style="display:flex;align-items:center;justify-content:center;width:1px;align-self:stretch;padding:20px 0;flex-shrink:0;">
+          <div style="width:1px;height:100%;background:#D8C7AE;"></div>
+        </div>
+
+        <!-- Zone URL -->
+        <div style="flex:1;padding:18px 22px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;background:var(--panel-bg);">
+          <div style="font-family:'Montserrat',sans-serif;font-size:8px;font-weight:500;color:var(--ink-mid);letter-spacing:0.06em;text-align:center;">Ou rendez-vous sur :</div>
+          <div style="width:100%;border:1.5px solid var(--gold);border-radius:3px;background:#FAF7F1;padding:9px 14px;text-align:center;">
+            <div id="cta-url" style="font-family:'Montserrat',sans-serif;font-size:9px;font-weight:600;color:var(--gold-dark);letter-spacing:0.02em;white-space:nowrap;word-break:break-all;"></div>
+          </div>
+          <div style="font-family:'Montserrat',sans-serif;font-size:8px;font-weight:400;color:#7D746A;text-align:center;line-height:1.5;">pour réserver votre bilan gratuit.</div>
+        </div>
+
+      </div>
+    </section>
+
+  </div>
+
+  <!-- FOOTER PAGE 2 -->
+  <div class="page-footer">
+    <span class="footer-note" id="footer-disclaimer-2"></span>
+    <span class="footer-page">2 / 2</span>
+  </div>
+
+</div><!-- /PAGE 2 -->
+
+
+<!-- ══════════════════════════════════════════════════
+     MOTEUR DYNAMIQUE
+     Connecte ce template au simulateur.
+     Toutes les données transitent par simulationData {}.
+══════════════════════════════════════════════════ -->
+<script>
+
+/* ╔══════════════════════════════════════════════════════════════╗
+   ║          SIMULATION DATA — SOURCE DE VÉRITÉ UNIQUE           ║
+   ║  Cet objet est le seul pont entre le simulateur et le PDF.   ║
+   ║  Il est peuplé par populateFromSimulator() qui lit           ║
+   ║  directement BRAND et state de index-master-white.html       ║
+   ╚══════════════════════════════════════════════════════════════╝ */
+
+const simulationData = {
+
+  /* ── Branding ── */
+  branding: {
+    name:        'Votre Cabinet',
+    tagline:     'Conseil en Gestion de Patrimoine',
+    version:     'Simulation personnalisée',
+    logo:        '',           // URL ou base64
+    logoAlt:     '',
+    logoHeight:  '46px',
+    ctaUrl:      'https://www.votrecabinet.fr/bilan-retraite',
+    ctaTitle:    'Transformez ce bilan en plan d\'action',
+    ctaText:     'Pour un accompagnement sur-mesure, prenez rendez-vous avec l\'un de nos conseillers patrimoniaux.',
+    disclaimer:  'Cette simulation patrimoniale est fournie à titre indicatif sur la base des éléments déclarés et de la réglementation applicable à la date de l\'analyse. Elle ne constitue ni une recommandation personnalisée, ni un conseil en investissement au sens de la directive MIF II.',
+
+    /* Palette — synchronisée avec BRAND */
+    colors: {
+      gold:        '#B8862F',
+      goldDark:    '#A8741F',
+      goldPale:    '#E8D49A',
+      goldLight:   '#C9952E',
+      goldWash:    '#FAF4E8',
+      pageBg:      '#FAF8F4',
+      panelBg:     '#F5F0E6',
+      panelGold:   '#F7F2E4',
+      ink:         '#1A1A1A',
+      inkMid:      '#2A2A2A',
+      rule:        '#E6E0D2',
+      ruleSoft:    '#EDE8DB',
+      ruleGhost:   '#F0EBE0',
+    }
+  },
+
+  /* ── Client ── */
+  client: {
+    age:              45,
+    anneeNaissance:   1980,
+    statut:           'cadre',         // cadre | non-cadre | fonctionnaire | tns
+    tnsProfession:    '',
+    nbEnfants:        0,
+    ageDepart:        64,
+    brutAnnuel:       72000,
+    netMensuel:       4500,
+    interruptionsMois:0,
+    niveauVie:        0.80,
+    epargnExistante:  0,
+  },
+
+  /* ── Résultats retraite ── */
+  retraite: {
+    pensionNetMensuelle:  3088,
+    pensionBrutMensuelle: 3369,
+    tauxRemplacement:     0.686,
+    objectifNiveauVie:    0.80,
+    trimCotises:          172,
+    trimRequis:           172,
+    situationRetrait:     'Taux plein',
+    tmi:                  0.30,
+    yearsToRetire:        19,
+  },
+
+  /* ── Projection capital ── */
+  projection: {
+    manqueMensuelNet:   512,
+    effortMensuel:      370,
+    coutReelMensuel:    259,
+    capitalFinal:       175632,
+    capitalVerse:       84437,
+    interetsCompose:    91195,
+    rendementAnnuel:    7,            // % / an
+    dureeAccumulation:  19,           // ans
+  },
+
+  /* ── Recommandations ── */
+  recommandations: [
+    {
+      title:    'Faites un bilan personnalisé avec nos experts',
+      text:     'Un échange avec nos experts permet d\'analyser précisément votre situation retraite, vos objectifs de vie et votre capacité d\'épargne afin de construire une stratégie patrimoniale cohérente et adaptée à votre horizon.',
+      badge:    'Bilan patrimonial',
+      priorite: 'Priorité 1',
+    },
+    {
+      title:    'Profitez de notre PER pour capitaliser et optimiser votre fiscalité',
+      text:     'Le Plan Épargne Retraite constitue aujourd\'hui l\'un des outils les plus efficaces pour préparer votre retraite tout en réduisant votre fiscalité actuelle. Grâce aux avantages fiscaux liés aux versements, vous pouvez capitaliser dans un cadre optimisé.',
+      badge:    'Fiscalité',
+      priorite: 'Priorité 2',
+    },
+    {
+      title:    'En cas d\'atteinte du plafond, étudions les solutions d\'assurance-vie',
+      text:     'Une fois votre plafond PER optimisé, l\'assurance-vie permet de poursuivre la constitution de votre patrimoine dans un cadre fiscal souple et performant, avec des solutions adaptées à vos objectifs de transmission et de diversification.',
+      badge:    'Diversification',
+      priorite: 'patrimoniale',
+    },
+  ],
+
+};
+
+/* ╔══════════════════════════════════════════════════════════════╗
+   ║   SAFE LOGGER — déclaré en premier, utilisé partout         ║
+   ║   console peut être dans un état dégradé dans un popup.     ║
+   ╚══════════════════════════════════════════════════════════════╝ */
+var _log = (function() {
+  try {
+    if (typeof window.console === 'object' && typeof window.console.log === 'function') {
+      return {
+        info:  function(m, v) { try { window.console.log('[PDF]',      m, v !== undefined ? v : ''); } catch(e) {} },
+        warn:  function(m, v) { try { window.console.log('[PDF WARN]', m, v !== undefined ? v : ''); } catch(e) {} },
+        error: function(m, v) { try { window.console.log('[PDF ERR]',  m, v !== undefined ? v : ''); } catch(e) {} },
+        debug: function(m, v) { try { window.console.log('[PDF DBG]',  m, v !== undefined ? v : ''); } catch(e) {} },
+      };
+    }
+  } catch(e) {}
+  return { info: function(){}, warn: function(){}, error: function(){}, debug: function(){} };
+})();
+
+/* ── Variables d'état du pipeline ── */
+var _domReady      = false;
+var _dataInjected  = false;
+var _renderPending = false;
+
+/* ── Lance renderAll() uniquement quand DOM + données sont prêts ── */
+function _safeRender() {
+  if (!_domReady) {
+    _renderPending = true;
+    _log.debug('renderAll() différé — DOM pas encore prêt', '');
+    return;
+  }
+  _log.debug('renderAll() → exécution', '');
+  try {
+    renderAll();
+  } catch(err) {
+    _log.error('Erreur dans renderAll()', err && err.message ? err.message : String(err));
+  }
+}
+
+/* ╔══════════════════════════════════════════════════════════════╗
+   ║   buildRecommandations(N, d)                                 ║
+   ║   N = objet normalisé produit par normalizeSimulationData()  ║
+   ║   Lit UNIQUEMENT N pour les valeurs de projection.           ║
+   ╚══════════════════════════════════════════════════════════════╝ */
+function buildRecommandations(N, d) {
+  const recos   = [];
+  /* Toutes les valeurs viennent de N — source de vérité unique */
+  const manque  = N.manqueMensuel   !== undefined ? N.manqueMensuel  : (d.projection.manqueMensuelNet || 0);
+  const effort  = N.effortMensuel   !== undefined ? N.effortMensuel  : (d.projection.effortMensuel    || 0);
+  const coutR   = N.coutReelMensuel !== undefined ? N.coutReelMensuel: (d.projection.coutReelMensuel  || 0);
+  const capFinal= N.capitalFinal    !== undefined ? N.capitalFinal   : (d.projection.capitalFinal     || 0);
+  const tmi     = N.tmi             !== undefined ? N.tmi            : (d.retraite.tmi                || 0);
+  const isTNS   = (N.statut || d.client.statut) === 'tns';
+  const horizon = N.horizon         !== undefined ? N.horizon        : (d.projection.dureeAccumulation|| 0);
+  const tmiPct  = Math.round(tmi * 100);
+
+  /* Reco 1 — Bilan toujours en Priorité 1 */
+  recos.push({
+    title:    'Réalisez un bilan patrimonial personnalisé',
+    text:     `Votre simulation révèle un manque estimé de ${fmt(manque)} par mois à la retraite. Un bilan personnalisé avec l'un de nos experts permettra d'analyser en détail votre situation, vos objectifs et de construire une stratégie patrimoniale cohérente sur votre horizon de ${horizon} ans.`,
+    badge:    'Bilan patrimonial',
+    priorite: 'Priorité 1',
+  });
+
+  /* Reco 2 — PER (toujours pertinent, adapté selon profil) */
+  if (isTNS) {
+    recos.push({
+      title:    'Maximisez votre plafond PER en tant qu\'indépendant',
+      text:     `En tant que travailleur non-salarié, votre plafond PER (article 154 bis CGI) est particulièrement avantageux. Un versement de ${fmt(effort)} par mois permettrait de constituer un capital estimé à ${fmtK(capFinal)} tout en réduisant votre TMI de ${tmiPct} %.`,
+      badge:    'Fiscalité TNS',
+      priorite: 'Priorité 2',
+    });
+  } else {
+    recos.push({
+      title:    'Profitez du PER pour capitaliser et optimiser votre fiscalité',
+      text:     `Le Plan Épargne Retraite constitue l'outil le plus efficace pour préparer votre retraite. Un effort de ${fmt(effort)} par mois (coût réel : ${fmt(coutR)} après économie fiscale à ${tmiPct} %) permettrait d'atteindre un capital estimé à ${fmtK(capFinal)}.`,
+      badge:    'Fiscalité',
+      priorite: 'Priorité 2',
+    });
+  }
+
+  /* Reco 3 — Diversification / urgence selon horizon */
+  if (horizon <= 10) {
+    recos.push({
+      title:    'Adoptez une stratégie de sécurisation progressive',
+      text:     `Avec un horizon retraite de ${horizon} ans, il est crucial d'optimiser immédiatement votre allocation. Une stratégie mixant PER, fonds euros et actifs prudents permettra de sécuriser votre capital tout en maintenant un potentiel de croissance adapté.`,
+      badge:    'Sécurisation',
+      priorite: `${horizon} ans restants`,
+    });
+  } else {
+    recos.push({
+      title:    'Diversifiez avec l\'assurance-vie pour amplifier votre patrimoine',
+      text:     `Une fois votre plafond PER optimisé, l'assurance-vie multisupport permet de poursuivre la capitalisation dans un cadre fiscal souple, avec des solutions en unités de compte adaptées à votre horizon de ${horizon} ans et à vos objectifs de transmission.`,
+      badge:    'Diversification',
+      priorite: 'patrimoniale',
+    });
+  }
+
+  return recos;
+}
+
+/* ╔══════════════════════════════════════════════════════════════╗
+   ║   syncBranding()                                             ║
+   ║                                                              ║
+   ║   Écrit UNIQUEMENT les vars --brand-* (couche dynamique).    ║
+   ║   Ne touche JAMAIS aux vars --fixed-* (couche DA premium).   ║
+   ║                                                              ║
+   ║   Garantie : même un cabinet bleu/rouge/vert                 ║
+   ║   ne peut pas casser l'ambiance patrimoniale du PDF.         ║
+   ╚══════════════════════════════════════════════════════════════╝ */
+function syncBranding() {
+  const c    = simulationData.branding.colors;
+  const root = document.documentElement;
+
+  /* ── Couche BRAND — seules vars modifiées par le cabinet ── */
+  root.style.setProperty('--brand-primary',       c.gold);
+  root.style.setProperty('--brand-primary-dark',  c.goldDark);
+  root.style.setProperty('--brand-primary-pale',  c.goldPale);
+  root.style.setProperty('--brand-primary-light', c.goldLight);
+  root.style.setProperty('--brand-primary-wash',  c.goldWash);
+
+  /* Filets brand — légèrement désaturés vers l'ivoire pour harmonie */
+  root.style.setProperty('--brand-rule',          c.rule);
+  root.style.setProperty('--brand-rule-soft',     c.ruleSoft);
+  root.style.setProperty('--brand-rule-ghost',    c.ruleGhost);
+
+  /* ── Couche FIXED — jamais modifiée ici ── */
+  /* --fixed-* sont déclarées en CSS pur et restent permanentes. */
+  /* --ink, --ink-mid, --page-bg, --panel-bg, --rouge, --vert    */
+  /* pointent vers --fixed-* via les aliases CSS et sont         */
+  /* donc immunisés contre tout changement de branding.          */
+}
+
+/* ╔══════════════════════════════════════════════════════════════╗
+   ║   renderAll()                                                ║
+   ║   Orchestre l'injection de toutes les données dans le DOM.   ║
+   ╚══════════════════════════════════════════════════════════════╝ */
+function renderAll() {
+  syncBranding();
+  renderHeader();
+  renderClientInfo();
+  renderKPI();
+  renderProjection();
+  renderDiagnostic();
+  renderStrategie();
+  renderRecommandations();
+  renderCTA();
+  renderFooter();
+  renderQR();
+}
+
+/* ─────────────────── HEADER ───────────────────── */
+function renderHeader() {
+  const b      = simulationData.branding;
+  const now    = new Date();
+  const dateStr = now.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
+
+  ['', '-2'].forEach(function(suffix) {
+    const imgEl     = document.getElementById('hdr-logo-img'       + suffix);
+    const wrapEl    = document.getElementById('hdr-logo-text-wrap' + suffix);
+    const nameEl    = document.getElementById('hdr-name'           + suffix);
+    const tagEl     = document.getElementById('hdr-tagline'        + suffix);
+    const dateEl    = document.getElementById('hdr-date'           + suffix);
+    const verEl     = document.getElementById('hdr-version'        + suffix);
+
+    /* ── Logo : image réelle ── */
+    if (b.logo && imgEl) {
+      imgEl.src              = b.logo;
+      imgEl.alt              = b.logoAlt || b.name;
+      /* Respecter le logoHeight fourni par BRAND, sinon laisser max-height CSS gérer */
+      if (b.logoHeight && b.logoHeight !== '62px') {
+        imgEl.style.maxHeight = b.logoHeight;
+      }
+      imgEl.style.display    = 'block';
+      if (wrapEl) wrapEl.style.display = 'none';
+    } else {
+      /* ── Fallback : nom textuel + tagline ── */
+      if (imgEl)  imgEl.style.display  = 'none';
+      if (wrapEl) wrapEl.style.display = 'flex';
+      if (nameEl) nameEl.textContent   = b.name     || '';
+      if (tagEl)  tagEl.textContent    = b.tagline  || '';
+    }
+
+    /* ── Date & version ── */
+    if (dateEl) dateEl.textContent = dateStr;
+    if (verEl)  verEl.textContent  = b.version || 'Simulation personnalisée';
+  });
+
+  document.getElementById('pageTitle').textContent = 'Bilan Patrimonial — ' + (b.name || '');
+}
+
+/* ─────────────────── CLIENT INFO ───────────────── */
+function renderClientInfo() {
+  const c  = simulationData.client;
+  const r  = simulationData.retraite;
+
+  const statutLabel = {
+    cadre:          'Cadre',
+    'non-cadre':    'Non-cadre',
+    fonctionnaire:  'Fonctionnaire',
+    tns:            c.tnsProfession || 'Indépendant',
+  }[c.statut] || c.statut;
+
+  setText('info-age-statut', `${c.age} ans · ${statutLabel}`);
+  setText('info-depart',     `Départ prévu à ${c.ageDepart} ans`);
+  setText('info-trimestres', `${r.trimCotises} trimestres validés / ${r.trimRequis} requis`);
+  setText('info-situation',  r.situationRetrait);
+  setText('info-salaire',    `${fmtBrut(c.brutAnnuel)} / an brut`);
+}
+
+/* ─────────────────── KPI ───────────────────────── */
+function renderKPI() {
+  const r = simulationData.retraite;
+  const c = simulationData.client;
+
+  setText('kpi-pension',      fmt(r.pensionNetMensuelle));
+  setText('kpi-salaire-net',  fmt(c.netMensuel));
+  setText('kpi-taux-remp',    pct(r.tauxRemplacement));
+  setText('kpi-objectif',     `Objectif : ${pct(r.objectifNiveauVie)}`);
+
+  /* Arc SVG taux de remplacement */
+  const arc    = document.getElementById('kpi-taux-arc');
+  if (arc) {
+    const circ   = 2 * Math.PI * 12; // r=12 → ~75.4
+    const filled = Math.min(1, r.tauxRemplacement) * circ;
+    arc.setAttribute('stroke-dasharray', `${filled.toFixed(1)} ${(circ - filled).toFixed(1)}`);
+  }
+}
+
+/* ─────────────────── PROJECTION ────────────────── */
+function renderProjection() {
+  const p   = simulationData.projection;
+  const n   = p.dureeAccumulation; // ans
+  const cap = p.capitalFinal;
+  const versé = p.capitalVerse;
+
+  /* Subtitle */
+  setText('proj-subtitle', `— Horizon ${n} ans · ${p.rendementAnnuel} % / an`);
+
+  /* Labels résumé */
+  setText('resume-verse',    fmtE(versé));
+  setText('resume-interets', fmtE(p.interetsCompose));
+  setText('resume-capital',  fmtE(cap));
+  setText('proj-label-final', fmtK(cap));
+
+  /* Génération du graphique SVG dynamique */
+  buildProjectionChart(n, cap, versé, p.effortMensuel, p.rendementAnnuel);
+}
+
+function buildProjectionChart(yearsTotal, capFinal, verseFinal, pmt, rend) {
+  /* Points à dessiner : An0, An(1/4), An(1/2), An(3/4), An(final) */
+  const r12 = (rend / 100) / 12;
+
+  function fvAt(yr) {
+    const m = yr * 12;
+    if (r12 > 0) return pmt * (Math.pow(1 + r12, m) - 1) / r12;
+    return pmt * m;
+  }
+  function verseAt(yr) { return pmt * 12 * yr; }
+
+  /* Jalons réguliers : jusqu'à 4 jalons + final */
+  const maxJalons  = 4;
+  const step       = Math.ceil(yearsTotal / maxJalons / 5) * 5 || Math.floor(yearsTotal / maxJalons);
+  const jalons     = [];
+  for (let y = step; y < yearsTotal; y += step) jalons.push(y);
+  jalons.push(yearsTotal);
+
+  const VW = 300, VH = 112;
+  const PAD_B = 4;   // base Y
+  const maxV  = capFinal * 1.05;
+
+  function toX(yr) { return (yr / yearsTotal) * VW; }
+  function toY(v)  { return VH - PAD_B - ((v / maxV) * (VH - PAD_B - 4)); }
+
+  /* Polylines */
+  const ptTotal  = jalons.map(y => `${toX(y).toFixed(1)},${toY(fvAt(y)).toFixed(1)}`).join(' ');
+  const ptVerse  = jalons.map(y => `${toX(y).toFixed(1)},${toY(verseAt(y)).toFixed(1)}`).join(' ');
+  const fillPts  = `0,${VH} ` + ptTotal + ` ${VW},${VH}`;
+
+  setAttr('proj-fill',  'points', fillPts);
+  setAttr('proj-total', 'points', '0,' + VH + ' ' + ptTotal);
+  setAttr('proj-versé', 'points', '0,' + VH + ' ' + ptVerse);
+
+  /* Points (cercles) sur la courbe Total */
+  const ptsG = document.getElementById('proj-points');
+  if (ptsG) {
+    ptsG.innerHTML = jalons.map((y, i) => {
+      const x = toX(y).toFixed(1);
+      const v = fvAt(y);
+      const cy = toY(v).toFixed(1);
+      const isLast = (i === jalons.length - 1);
+      return isLast
+        ? `<circle cx="${x}" cy="${cy}" r="4.5" fill="var(--gold)" stroke="var(--gold)" stroke-width="1.6"/>`
+        : `<circle cx="${x}" cy="${cy}" r="3.5" fill="var(--page-bg)" stroke="var(--gold)" stroke-width="1.6"/>`;
+    }).join('');
+  }
+
+  /* Labels montants sur graphique (HTML absolu) */
+  const labelsEl = document.getElementById('proj-labels');
+  if (labelsEl) {
+    /* ── Anti-collision labels financiers ─────────────────────────
+       Mêmes jalons que le graphique, sans le dernier (géré à part).
+       Règle : distance minimale entre labels = 20% de la largeur.
+       Si deux labels sont trop proches : le précédent passe en
+       opacité réduite (0.35) — l'information reste présente mais
+       le label final reste toujours prioritaire et pleinement lisible.
+    ─────────────────────────────────────────────────────────────── */
+    const MIN_GAP_PCT = 20;  // % de la largeur du conteneur
+
+    /* Construire la liste des labels intermédiaires avec position X */
+    const intermediates = jalons.slice(0, -1).map(y => ({
+      year: y,
+      v:    fvAt(y),
+      pctX: y / yearsTotal * 100,
+    }));
+
+    /* Calculer la position X du label final (coin droit) */
+    const finalPctX = 100;
+
+    /* Passe anti-collision : marquer chaque label comme visible ou atténué */
+    let lastVisiblePctX = -Infinity;
+    const annotated = intermediates.map((item, idx) => {
+      const distToPrev  = item.pctX - lastVisiblePctX;
+      const distToFinal = finalPctX - item.pctX;
+
+      /* Visible si :
+         - assez loin du précédent visible
+         - assez loin du label final */
+      const visible = distToPrev >= MIN_GAP_PCT && distToFinal >= MIN_GAP_PCT;
+      if (visible) lastVisiblePctX = item.pctX;
+      return { ...item, visible };
+    });
+
+    labelsEl.innerHTML = annotated.map(item => {
+      const pctY    = (100 - (item.v / maxV * 100) - 18).toFixed(1);
+      const opacity = item.visible ? '1' : '0.32';
+      const size    = item.visible ? '13px' : '11px';
+      return `<div style="position:absolute;left:${item.pctX.toFixed(1)}%;transform:translateX(-50%);top:${pctY}%;
+                font-family:'Cormorant Garamond',serif;font-size:${size};font-weight:600;
+                color:var(--ink-mid);line-height:1;white-space:nowrap;text-align:center;
+                letter-spacing:0.01em;opacity:${opacity};transition:opacity 0.2s;">
+                ${fmtK(item.v)}
+              </div>`;
+    }).join('');
+  }
+
+  /* Axe X — labels visibles filtrés
+     Tous les points restent calculés et affichés graphiquement.
+     Seuls les labels X sont soumis au filtre anti-chevauchement. */
+  const xEl = document.getElementById('proj-xaxis');
+  if (xEl) {
+    const xLabels = selectVisibleXAxisLabels(jalons, yearsTotal, 4);
+    xEl.innerHTML = xLabels.map(function(item) {
+      var y      = item.year;
+      var isLast = item.isLast;
+      var left   = isLast ? 'auto' : (y / yearsTotal * 100).toFixed(1) + '%';
+      var right  = isLast ? '0'    : 'auto';
+      var xform  = isLast ? 'translateX(0)' : 'translateX(-50%)';
+      return '<div style="position:absolute;left:' + left + ';right:' + right + ';transform:' + xform + ';">'
+           + '<span style="font-family:\'Montserrat\',sans-serif;font-size:11px;font-weight:600;color:var(--ink-mid);">An ' + y + '</span>'
+           + '</div>';
+    }).join('') + '<span style="visibility:hidden;font-size:11px;">spacer</span>';
+  }
+}
+
+/* ╔══════════════════════════════════════════════════════════════╗
+   ║   selectVisibleXAxisLabels(jalons, yearsTotal, maxLabels)    ║
+   ║                                                              ║
+   ║   Choisit quels labels X afficher pour éviter les           ║
+   ║   chevauchements, quelle que soit la durée de projection.    ║
+   ║                                                              ║
+   ║   Règle : max maxLabels labels visibles, toujours le final.  ║
+   ║   Distance minimale entre deux labels : 100% / maxLabels.   ║
+   ║                                                              ║
+   ║   Ne modifie PAS les points, les courbes, ni les jalons.    ║
+   ╚══════════════════════════════════════════════════════════════╝ */
+function selectVisibleXAxisLabels(jalons, yearsTotal, maxLabels) {
+  if (!jalons || jalons.length === 0) return [];
+
+  var last    = jalons[jalons.length - 1];
+  /* Espacement minimum entre labels : fraction de la largeur totale.
+     Ex : maxLabels=4 → labels doivent être espacés d'au moins 25%. */
+  var minGapPct = 100 / maxLabels;
+
+  var selected  = [];   // labels retenus
+  var lastPct   = -Infinity; // position % du dernier label ajouté
+
+  /* Parcourir jalons sans le final — on l'ajoute séparément */
+  for (var i = 0; i < jalons.length - 1; i++) {
+    var y      = jalons[i];
+    var pct    = y / yearsTotal * 100;
+
+    /* Distance avec le label précédent (ou avec la fin) */
+    var distToPrev = pct - lastPct;
+    var distToEnd  = last / yearsTotal * 100 - pct;
+
+    /* N'ajouter ce label que si :
+       1. assez éloigné du précédent
+       2. assez éloigné du label final (pour éviter collision avec "An N")
+       3. nombre max non atteint (on réserve une place pour le final) */
+    if (distToPrev >= minGapPct
+        && distToEnd >= minGapPct
+        && selected.length < maxLabels - 1) {
+      selected.push({ year: y, isLast: false });
+      lastPct = pct;
+    }
+  }
+
+  /* Label final — toujours ajouté, sauf si trop proche du précédent.
+     Si trop proche : on supprime le précédent pour lui laisser la place. */
+  var lastPct2 = last / yearsTotal * 100;
+  if (selected.length > 0) {
+    var prevPct = selected[selected.length - 1].year / yearsTotal * 100;
+    if (lastPct2 - prevPct < minGapPct) {
+      /* Trop proches — retirer le dernier label intermédiaire */
+      selected.pop();
+    }
+  }
+  selected.push({ year: last, isLast: true });
+
+  return selected;
+}
+
+/* ─────────────────── DIAGNOSTIC ────────────────── */
+function renderDiagnostic() {
+  const p = simulationData.projection;
+  const r = simulationData.retraite;
+  const tmiPct = Math.round(r.tmi * 100);
+
+  setText('diag-manque',    `−${fmt(p.manqueMensuelNet)}`);
+  setText('diag-effort',    fmt(p.effortMensuel));
+  setText('diag-tmi-label', `Coût réel après PER (TMI ${tmiPct} %) :`);
+  setText('diag-cout-reel', fmt(p.coutReelMensuel));
+}
+
+/* ─────────────────── STRATÉGIE ─────────────────── */
+function renderStrategie() {
+  const p          = simulationData.projection;
+  const r          = simulationData.retraite;
+  const n          = p.dureeAccumulation;
+  const mode       = p.mode || 'capital';   /* 'capital' | 'interests' */
+  const ageDepart  = simulationData.client.ageDepart;
+
+  /* ── Formatage des valeurs clés ─────────────────────────── */
+  const B = (txt) => `<strong style="font-weight:700;color:var(--ink);">${txt}</strong>`;
+
+  const vManque   = B(`${fmt(p.manqueMensuelNet)} par mois`);
+  const vEffort   = B(`${fmt(p.effortMensuel)} par mois`);
+  const vRend     = B(`${p.rendementAnnuel} % par an`);
+  const vCapCible = B(fmtE(p.capitalFinal));          // FV portefeuille accumulé
+
+  const el1 = document.getElementById('strat-p1');
+  const el2 = document.getElementById('strat-p2');
+  const el3 = document.getElementById('strat-p3');
+
+  /* ── Paragraphe 1 — commun aux deux modes ───────────────── */
+  if (el1) el1.innerHTML =
+    `Pour maintenir votre niveau de vie à la retraite, vous devrez compenser `
+    + `un manque estimé de ${vManque}.`;
+
+  /* ── Paragraphe 2 — commun aux deux modes ───────────────── */
+  if (el2) el2.innerHTML =
+    `En investissant ${vEffort} sur un Plan Épargne Retraite `
+    + `avec une performance moyenne estimée à ${vRend}, `
+    + `vous pourriez constituer un capital de ${vCapCible} à horizon retraite.`;
+
+  /* ── Paragraphe 3 — spécifique au mode ─────────────────── */
+  if (el3) {
+    if (mode === 'capital') {
+      /* Mode "Vivre de son capital" — décaissement sur ~20 ans */
+      const dureeDecaissement = B('20 ans de retraite');
+      el3.innerHTML =
+        `En consommant progressivement ce capital sur ${dureeDecaissement}, `
+        + `celui-ci pourrait vous permettre de percevoir environ `
+        + `${B(fmt(p.manqueMensuelNet) + ' mensuels complémentaires')}.`;
+    } else {
+      /* Mode "Vivre de ses intérêts" — capital intact, rente perpétuelle */
+      const dureeRet = Math.max(15, 84 - ageDepart);
+      el3.innerHTML =
+        `En ne consommant que les intérêts générés par ce capital, `
+        + `vous pourriez percevoir ${B(fmt(p.manqueMensuelNet) + '/mois net')} `
+        + `à perpétuité — capital intact et transmissible à vos héritiers.`;
+    }
+  }
+}
+
+/* ─────────────────── RECOMMANDATIONS ───────────── */
+function renderRecommandations() {
+  const recos  = simulationData.recommandations;
+  const container = document.getElementById('recos-container');
+  if (!container) return;
+
+  container.innerHTML = recos.map((rec, i) => {
+    const isPriority = !isNaN(parseInt(rec.priorite));
+    const badgeClass = isPriority ? 'badge-priority' : 'badge-neutral';
+    const lblClass   = isPriority ? 'badge-lbl'      : 'badge-lbl-n';
+    const subClass   = isPriority ? 'badge-sub'      : 'badge-sub-n';
+
+    return `
+    <div class="reco-row">
+      <div class="reco-bubble">
+        <span>${i + 1}</span>
+      </div>
+      <div style="flex:1;">
+        <div class="reco-title">${rec.title}</div>
+        <p class="body-copy">${rec.text}</p>
+      </div>
+      <div class="${badgeClass}">
+        <span class="${lblClass}">${rec.badge}</span>
+        <span class="${subClass}">· ${rec.priorite}</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+/* ─────────────────── CTA ───────────────────────── */
+function renderCTA() {
+  const b = simulationData.branding;
+  setText('cta-title', b.ctaTitle);
+  setText('cta-text',  b.ctaText);
+  setText('cta-url',   b.ctaUrl.replace(/^https?:\/\//, ''));
+}
+
+/* ─────────────────── FOOTER ────────────────────── */
+function renderFooter() {
+  const b   = simulationData.branding;
+  const now = new Date();
+  const year = now.getFullYear();
+
+  const disclaimer = b.disclaimer
+    .replace('{year}', year)
+    .replace('{version}', b.version || '')
+    .replace('{name}', b.name || '');
+
+  setText('footer-disclaimer-1', disclaimer);
+  setText('footer-disclaimer-2', disclaimer);
+}
+
+/* ─────────────────── QR CODE ───────────────────── */
+function renderQR() {
+  const url = simulationData.branding.ctaUrl;
+  if (!url) return;
+
+  const qrImg  = document.getElementById('qr-img');
+  const qrPlch = document.getElementById('qr-placeholder');
+
+  /* Utilise qrserver.com (API publique gratuite, net en impression) */
+  const qrSrc = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&margin=4&data=${encodeURIComponent(url)}&color=1A1A1A&bgcolor=FFFFFF`;
+
+  if (qrImg) {
+    qrImg.src = qrSrc;
+    qrImg.style.display = 'block';
+    if (qrPlch) qrPlch.style.display = 'none';
+
+    qrImg.onerror = () => {
+      /* Fallback si pas de réseau : affichage textuel */
+      qrImg.style.display = 'none';
+      if (qrPlch) {
+        qrPlch.style.display = 'block';
+        qrPlch.innerHTML = `<span style="font-size:6px;word-break:break-all;color:var(--gold-dark);line-height:1.4;">${url}</span>`;
+      }
+    };
+  }
+}
+
+/* ╔══════════════════════════════════════════════════════════════╗
+   ║   UTILITAIRES DE FORMATAGE                                   ║
+   ╚══════════════════════════════════════════════════════════════╝ */
+function fmt(v)  { return Math.round(v).toLocaleString('fr-FR') + ' €'; }
+function fmtE(v) { return Math.round(v).toLocaleString('fr-FR') + ' €'; }
+function fmtK(v) {
+  if (v >= 1000000) return (v / 1000000).toFixed(1) + ' M€';
+  return Math.round(v / 1000) + ' k€';
+}
+function fmtBrut(v) { return Math.round(v).toLocaleString('fr-FR') + ' €'; }
+function pct(v)  { return (v * 100).toFixed(1).replace('.', ',') + ' %'; }
+
+function setText(id, val) {
+  const el = document.getElementById(id);
+  if (el) el.textContent = val;
+}
+function setAttr(id, attr, val) {
+  const el = document.getElementById(id);
+  if (el) el.setAttribute(attr, val);
+}
+
+/* ╔══════════════════════════════════════════════════════════════╗
+   ║   PIPELINE D'INITIALISATION                                  ║
+   ║                                                              ║
+   ║   Priorité :                                                 ║
+   ║   1. Appelé directement par le simulateur via                ║
+   ║      pdfWindow.populateFromSimulator(payload) → renderAll()  ║
+   ║      déjà inclus dans populateFromSimulator()                ║
+   ║                                                              ║
+   ║   2. postMessage reçu depuis le simulateur                   ║
+   ║      (cross-origin / GitHub Pages)                           ║
+   ║                                                              ║
+   ║   3. Accès window.opener (même origine)                      ║
+   ║                                                              ║
+   ║   4. Preview standalone → données exemple par défaut         ║
+   ╚══════════════════════════════════════════════════════════════╝ */
+
+/* ╔══════════════════════════════════════════════════════════════╗
+   ║   PIPELINE D'INITIALISATION — DOMContentLoaded               ║
+   ╚══════════════════════════════════════════════════════════════╝ */
+document.addEventListener('DOMContentLoaded', function() {
+  _domReady = true;
+  _log.info('DOMContentLoaded — _dataInjected =', _dataInjected);
+
+  /* ── 1. Données déjà injectées avant DOMContentLoaded ?        */
+  /*    (cas : simulateur rapide via pdfWindow.onload)             */
+  if (_dataInjected) {
+    _log.info('Données déjà injectées → renderAll()');
+    _safeRender();
+    return;
+  }
+
+  /* ── 2. Tentative window.opener (même origine, fichiers locaux) */
+  try {
+    var sim = window.opener;
+    if (sim && sim !== window
+        && typeof sim.BRAND !== 'undefined'
+        && typeof sim.state !== 'undefined'
+        && sim.state
+        && sim.state.pensionNet !== undefined) {
+
+      _log.info('window.opener accessible — extraction payload');
+
+      var payload = {
+        BRAND:             sim.BRAND,
+        state:             sim.state,
+        selectedRendement: (typeof sim.currentRend !== 'undefined') ? sim.currentRend : 7,
+        selectedLifestyle: (typeof sim.currentLife !== 'undefined') ? sim.currentLife : 80,
+        currentMode:       (typeof sim.currentMode !== 'undefined') ? sim.currentMode : 'capital',
+        projectionData:    null,
+        cssVarsLive:       null,
+      };
+
+      _log.debug('payload.state.pensionNet', payload.state.pensionNet);
+      _log.debug('payload.BRAND.name', payload.BRAND.name);
+
+      _hydrateSimulationData(payload);
+      _dataInjected = true;
+      _safeRender();
+      return;
+    }
+  } catch(e) {
+    /* Cross-origin normal — on continue vers le fallback */
+    _log.warn('window.opener non accessible (cross-origin ou standalone)', e && e.message ? e.message : '');
+  }
+
+  /* ── 3. Aucune donnée reçue — attendre postMessage 3 secondes  */
+  /*    puis fallback données exemple si toujours rien             */
+  var _fallbackTimer = setTimeout(function() {
+    if (!_dataInjected) {
+      _log.info('Timeout postMessage — rendu données exemple');
+      _safeRender();
+    }
+  }, 3000);
+
+  /* Stocker le timer pour pouvoir l'annuler si postMessage arrive */
+  window.__pdfFallbackTimer = _fallbackTimer;
+
+  _log.info('En attente postMessage du simulateur…');
+});
+
+/* ╔══════════════════════════════════════════════════════════════╗
+   ║   LISTENER postMessage — cross-origin / GitHub Pages         ║
+   ╚══════════════════════════════════════════════════════════════╝ */
+window.addEventListener('message', function(ev) {
+  if (!ev.data || ev.data.type !== 'INIT_PDF') return;
+
+  var payload = ev.data;
+  _log.info('postMessage INIT_PDF reçu — BRAND.name =', payload.BRAND && payload.BRAND.name);
+  _log.debug('payload.state.pensionNet', payload.state && payload.state.pensionNet);
+  _log.debug('payload.projectionData', JSON.stringify(payload.projectionData || null));
+
+  if (!payload.BRAND || !payload.state) {
+    _log.error('postMessage INIT_PDF incomplet — payload.BRAND ou payload.state manquant');
+    return;
+  }
+
+  /* Annuler le fallback standalone si en attente */
+  if (window.__pdfFallbackTimer) {
+    clearTimeout(window.__pdfFallbackTimer);
+    window.__pdfFallbackTimer = null;
+  }
+
+  _hydrateSimulationData(payload);
+  _dataInjected = true;
+  _safeRender();
+});
+
+/* ╔══════════════════════════════════════════════════════════════╗
+   ║   normalizeSimulationData(payload)                           ║
+   ║   SOURCE DE VÉRITÉ UNIQUE du template PDF.                   ║
+   ║                                                              ║
+   ║   Reçoit le payload de buildSimulationPayload() et produit   ║
+   ║   un objet normalisé plat utilisé par TOUS les composants.   ║
+   ║                                                              ║
+   ║   RÈGLE ABSOLUE : zéro fallback ||, zéro recalcul si         ║
+   ║   projectionData est fourni, zéro ancienne variable.         ║
+   ╚══════════════════════════════════════════════════════════════╝ */
+function normalizeSimulationData(payload) {
+
+  var B  = payload.BRAND;          // branding
+  var s  = payload.state;          // données client
+  var pd = payload.projectionData; // valeurs affichées dans le simulateur ← priorité absolue
+  var rend = payload.selectedRendement;
+
+  /* ── Objet normalisé plat ───────────────────────────────────── */
+  var N = {
+
+    /* ── Identité client ── */
+    age:              s.currentAge,
+    anneeNaissance:   s.birthYear,
+    statut:           s.statut,
+    tnsProfession:    s.tnsProfession || '',
+    nbEnfants:        s.children || 0,
+    ageDepart:        s.retireAge,
+    brutAnnuel:       s.brutSalary,
+    netMensuel:       Math.round(s.monthlySalaryNet),
+    interruptionsMois:s.gapsMonths || 0,
+    niveauVie:        s.lifestyle,
+
+    /* ── Pension & taux ── */
+    pensionNetMensuelle:  Math.round(s.pensionNet),
+    pensionBrutMensuelle: Math.round(s.pensionBrut),
+    tauxRemplacement:     s.tauxRemplacement,
+    objectifNiveauVie:    s.lifestyle,
+    trimCotises:          s.trimCotises || 0,
+    trimRequis:           s.DUREE_REF   || 172,
+    situationRetrait:     s.situationRetrait || '',
+    tmi:                  s.tmi || 0,
+    yearsToRetire:        s.yearsToRetire || 0,
+
+    /* ── Valeurs de projection — ISSUES DU SIMULATEUR ── */
+    /*    Lues directement depuis projectionData. Pas de recalcul.  */
+    manqueMensuel:   pd.manqueMensuel,    // manque mensuel affiché à l'écran
+    effortMensuel:   pd.effortMensuel,    // versement mensuel affiché
+    coutReelMensuel: pd.coutReelMensuel,  // coût réel après TMI affiché
+    capitalCible:    pd.capitalCible,     // capital cible affiché
+    capitalFinal:    pd.capitalFinal,     // FV portefeuille accumulé
+    capitalVerse:    pd.capitalVerse,     // total versé
+    interetsCompose: pd.interetsCompose,  // intérêts composés
+
+    /* ── Paramètres projection ── */
+    rendement:  rend,
+    horizon:    s.yearsToRetire || 0,
+    r7:         s.r7 || (rend / 100 / 12),
+    n7:         s.n7 || 0,
+    mode:       payload.currentMode || 'capital',
+
+    /* ── Branding ── */
+    brandName:    B.name,
+    brandTagline: B.tagline,
+    brandVersion: B.version,
+    brandLogo:    B.logo || '',
+    brandLogoAlt: B.logoAlt || B.name || '',
+    brandLogoH:   B.logoHeight || '46px',
+    ctaUrl:       B.ctaUrl || B.website || '',
+    ctaTitle:     B.ctaTitle || '',
+    ctaText:      B.ctaText  || '',
+    disclaimer:   B.disclaimer || '',
+
+    /* ── Palette ── */
+    colors: {
+      gold:      (payload.cssVarsLive && payload.cssVarsLive.gold)     || B.primary      || '#B8862F',
+      goldDark:  B.primary                                             || '#A8741F',
+      goldPale:  B.primaryPale                                         || '#E8D49A',
+      goldLight: B.primaryLight                                        || '#C9952E',
+      goldWash:  B.bg                                                  || '#FAF4E8',
+      pageBg:    B.bgCard                                              || '#FAF8F4',
+      panelBg:   B.bg                                                  || '#F5F0E6',
+      panelGold: B.bgCard                                              || '#F7F2E4',
+      ink:       B.text                                                || '#1A1A1A',
+      inkMid:    B.textMuted                                           || '#2A2A2A',
+      rule:      B.border                                              || '#E6E0D2',
+      ruleSoft:  B.border                                              || '#EDE8DB',
+      ruleGhost: B.border                                              || '#F0EBE0',
+    },
+  };
+
+  /* ── DEBUG ─────────────────────────────────────────────────── */
+  _log.info('normalizeSimulationData — résultat normalisé :');
+  try { window.console.table && window.console.table({
+    manqueMensuel:   N.manqueMensuel,
+    effortMensuel:   N.effortMensuel,
+    coutReelMensuel: N.coutReelMensuel,
+    capitalCible:    N.capitalCible,
+    capitalFinal:    N.capitalFinal,
+    capitalVerse:    N.capitalVerse,
+    interetsCompose: N.interetsCompose,
+    rendement:       N.rendement,
+    horizon:         N.horizon,
+    pensionNet:      N.pensionNetMensuelle,
+    tauxRemp:        (N.tauxRemplacement * 100).toFixed(1) + '%',
+  }); } catch(e) {}
+
+  return N;
+}
+
+/* ╔══════════════════════════════════════════════════════════════╗
+   ║   _hydrateSimulationData(payload)                            ║
+   ║   Appelle normalizeSimulationData() et écrit dans            ║
+   ║   simulationData pour compatibilité avec renderAll().        ║
+   ╚══════════════════════════════════════════════════════════════╝ */
+function _hydrateSimulationData(payload) {
+
+  _log.info('_hydrateSimulationData — début');
+  _log.debug('payload.BRAND.name',               payload.BRAND && payload.BRAND.name);
+  _log.debug('payload.state.pensionNet',          payload.state && payload.state.pensionNet);
+  _log.debug('payload.projectionData.effortMensuel', payload.projectionData && payload.projectionData.effortMensuel);
+  _log.debug('payload.projectionData.capitalCible',  payload.projectionData && payload.projectionData.capitalCible);
+  _log.debug('payload.projectionData.capitalVerse',  payload.projectionData && payload.projectionData.capitalVerse);
+
+  var N = normalizeSimulationData(payload);
+  var d = simulationData;
+
+  /* ── Branding → simulationData.branding ─── */
+  d.branding.name        = N.brandName;
+  d.branding.tagline     = N.brandTagline;
+  d.branding.version     = N.brandVersion;
+  d.branding.logo        = N.brandLogo;
+  d.branding.logoAlt     = N.brandLogoAlt;
+  d.branding.logoHeight  = N.brandLogoH;
+  d.branding.ctaUrl      = N.ctaUrl;
+  d.branding.ctaTitle    = N.ctaTitle;
+  d.branding.ctaText     = N.ctaText;
+  d.branding.disclaimer  = N.disclaimer;
+  d.branding.colors      = N.colors;
+
+  /* ── Client → simulationData.client ─────── */
+  d.client.age             = N.age;
+  d.client.anneeNaissance  = N.anneeNaissance;
+  d.client.statut          = N.statut;
+  d.client.tnsProfession   = N.tnsProfession;
+  d.client.nbEnfants       = N.nbEnfants;
+  d.client.ageDepart       = N.ageDepart;
+  d.client.brutAnnuel      = N.brutAnnuel;
+  d.client.netMensuel      = N.netMensuel;
+  d.client.interruptionsMois = N.interruptionsMois;
+  d.client.niveauVie       = N.niveauVie;
+  d.client.epargnExistante = payload.state.existingSavings || 0;
+
+  /* ── Retraite → simulationData.retraite ─── */
+  d.retraite.pensionNetMensuelle  = N.pensionNetMensuelle;
+  d.retraite.pensionBrutMensuelle = N.pensionBrutMensuelle;
+  d.retraite.tauxRemplacement     = N.tauxRemplacement;
+  d.retraite.objectifNiveauVie    = N.objectifNiveauVie;
+  d.retraite.trimCotises          = N.trimCotises;
+  d.retraite.trimRequis           = N.trimRequis;
+  d.retraite.situationRetrait     = N.situationRetrait;
+  d.retraite.tmi                  = N.tmi;
+  d.retraite.yearsToRetire        = N.yearsToRetire;
+
+  /* ── Projection → simulationData.projection ─
+     UNIQUEMENT depuis normalizedData (= projectionData du simulateur) */
+  d.projection.manqueMensuelNet  = N.manqueMensuel;
+  d.projection.effortMensuel     = N.effortMensuel;
+  d.projection.coutReelMensuel   = N.coutReelMensuel;
+  d.projection.capitalFinal      = N.capitalFinal;
+  d.projection.capitalVerse      = N.capitalVerse;
+  d.projection.interetsCompose   = N.interetsCompose;
+  d.projection.rendementAnnuel   = N.rendement;
+  d.projection.dureeAccumulation = N.horizon;
+  d.projection.mode              = N.mode;
+
+  /* ── Recommandations — pilotées par N ────── */
+  d.recommandations = buildRecommandations(N, d);
+
+  _log.info('_hydrateSimulationData — terminé ✓');
+  _log.debug('simulationData.projection.effortMensuel',   d.projection.effortMensuel);
+  _log.debug('simulationData.projection.capitalFinal',    d.projection.capitalFinal);
+  _log.debug('simulationData.projection.capitalVerse',    d.projection.capitalVerse);
+  _log.debug('simulationData.projection.coutReelMensuel', d.projection.coutReelMensuel);
+}
+
+/* ╔══════════════════════════════════════════════════════════════╗
+   ║   API PUBLIQUE EXPOSÉE                                       ║
+   ║                                                              ║
+   ║   Depuis index.html (même origine) :                         ║
+   ║     const pdfWin = window.open('bilan_retraite_dynamique.html');
+   ║     pdfWin.onload = () => {                                  ║
+   ║       pdfWin.populateFromSimulator(payload);                 ║
+   ║     };                                                       ║
+   ║                                                              ║
+   ║   Ou via postMessage (cross-origin) :                        ║
+   ║     pdfWin.postMessage({ type:'INIT_PDF', ...payload }, '*');║
+   ╚══════════════════════════════════════════════════════════════╝ */
+window.populateFromSimulator = function(payload) {
+  _log.info('populateFromSimulator() appelé — payload.BRAND.name =', payload && payload.BRAND && payload.BRAND.name);
+
+  /* ── Mode Puppeteer : fond ivoire, pas d'espacement entre pages ── */
+  if (payload && payload._puppeteerMode) {
+    document.body.classList.add('puppeteer-mode');
+  }
+
+  /* Annuler le fallback standalone si en attente */
+  if (window.__pdfFallbackTimer) {
+    clearTimeout(window.__pdfFallbackTimer);
+    window.__pdfFallbackTimer = null;
+  }
+
+  if (!payload || !payload.BRAND || !payload.state) {
+    _log.error('populateFromSimulator — payload invalide', JSON.stringify(payload && Object.keys(payload)));
+    return;
+  }
+
+  _hydrateSimulationData(payload);
+  _dataInjected = true;
+  _safeRender();
+};
+
+window.renderAll        = renderAll;
+window.simulationData   = simulationData;
+
+</script>
+</body>
+</html>
