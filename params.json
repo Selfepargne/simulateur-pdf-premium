@@ -16,7 +16,7 @@
 
   "cnav": {
     "_comment": "Régime de base — salariés, TNS, fonctionnaires",
-    "PASS": 46368,
+    "PASS": 47100,
     "duree_reference_trimestres": 172,
     "taux_maximum_base": 0.50,
     "decote_par_trimestre_manquant_pct": 0.625,
@@ -98,10 +98,10 @@
     "_comment": "Barème IR applicable pendant la phase d'accumulation (revenus d'activité). Mettre à jour avec la LFI de chaque année.",
     "abattement_frais_professionnels_pct": 0.10,
     "tranches": [
-      { "jusqu_a": 11294, "taux": 0.00 },
-      { "jusqu_a": 28797, "taux": 0.11 },
-      { "jusqu_a": 82341, "taux": 0.30 },
-      { "jusqu_a": 177106, "taux": 0.41 },
+      { "jusqu_a": 11600, "taux": 0.00 },
+      { "jusqu_a": 29579, "taux": 0.11 },
+      { "jusqu_a": 84577, "taux": 0.30 },
+      { "jusqu_a": 181917, "taux": 0.41 },
       { "jusqu_a": null,   "taux": 0.45 }
     ]
   },
